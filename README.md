@@ -64,6 +64,7 @@ We provide the code to generate the video showcasing the high-resolution capabil
 ```bash
 python demo_high_res.py --img1 assets/img1.jpg --img2 assets/img2.jpg 
 ```
+![overview](assets/pow3r_demo.jpg)
 
 ## Training
 
