@@ -1,0 +1,81 @@
+Pow3R Notice of acknowledgements:
+
+=================================
+SECTION 1: NAVER SPECIFIC NOTICES
+=================================
+
+Portions of the Materials may utilize following cited elements that are subject to separate copyright notices and the same license terms as the Materials.
+
+---------------------------------------------------------
+PART 1: SEE NOTICES BELOW WITH RESPECT TO SOFTWARE FILES:
+---------------------------------------------------------
+The following potions of the Materials are subject to the following copyright notice:
+(1.1.A) https://github.com/naver/dust3r: DUSt3R, Copyright (c) 2024-present Naver Corporation
+(1.1.B) https://github.com/naver/mast3r: MASt3R, Copyright (c) 2024-present Naver Corporation
+
+------------------------------------------------------
+PART 2: SEE NOTICES BELOW WITH RESPECT TO MODEL FILES:
+------------------------------------------------------
+
+(1.2.A) Portions of the Materials include models derrived from the following model: CroCo v2 Model: CroCo_V2_ViTLarge_BaseDecoder, 
+available here: https://github.com/naver/croco
+and subject to the following copyright notice: CroCo, Copyright (c) 2022-present Naver Corporation
+
+The following datasets, which are not being distributed with the Materials, are available under the following terms and conditions, which as applicable also apply to the use of checkpoints distributed with the Materials that are trained using the CroCo v2 Model (i.e., any use of checkpoints derived from such datasets are subject, as applicable, to any additional terms and conditions of the corresponding dataset license in addition to the terms and conditions of the License to the Materials):
+https://github.com/naver/croco/NOTICE_CHECKPOINTS
+
+=====================================
+SECTION 2: NON-NAVER SPECIFIC NOTICES
+=====================================
+
+Portions of the Materials may utilize following cited elements that are subject to separate copyright notices and license terms, the use of which is hereby acknowledged:
+
+---------------------------------------------------------
+PART 1: SEE NOTICES BELOW WITH RESPECT TO SOFTWARE FILES:
+---------------------------------------------------------
+
+Portions of the Materials listed in this PART 1 that include modified and/or unmodified elements from pre-existing software are distributed under the same terms and conditions as those under which such pre-existing software is made available.
+
+(2.1.1) SOFTWARE MATERIALS DISTRIBUTED HERE: 
+pow3r/model/blocks.py
+
+INCLUDE MODIFIED AND/OR UNMODIFIED ELEMENTS FROM PRE-EXISTING SOFTWARE AVAILABLE HERE:
+https://github.com/huggingface/pytorch-image-models
+
+WHICH PRE-EXISTING SOFTWARE IS MADE AVAILABLE UNDER THE TERMS AND CONDITIONS HERE (Apache License Version 2.0):
+https://github.com/huggingface/pytorch-image-models/blob/main/LICENSE
+
+
+------------------------------------------------------
+PART 2: SEE NOTICES BELOW WITH RESPECT TO MODEL FILES:
+------------------------------------------------------
+
+Portions of the Materials include models derived from the following model(s) that are available under the following terms, which as applicable also apply to the use of models distributed with the Materials (i.e., any use of derived models derived, as applicable, to any additional terms and conditions of the corresponding model license in addition to the terms and conditions of the License to the Materials):
+
+N/A
+
+
+-----------------------------------------------------
+PART 3: SEE NOTICES BELOW WITH RESPECT TO DATA FILES:
+-----------------------------------------------------
+The datasets listed in this PART 2, which are not being distributed with the Materials, are available under the following terms, which as applicable also apply to the use of checkpoints distributed with the Materials that are trained using such datasets (i.e., any use of checkpoints derived from such datasets are subject, as applicable, to any additional terms and conditions of the corresponding dataset license in addition to the terms and conditions of the License to the Materials):
+
+Summary:
+See (2.3.A) below: CO3Dv2 (https://github.com/facebookresearch/co3d);
+See (2.3.B) below: ScanNet++ (https://kaldir.vc.in.tum.de/scannetpp/);
+See (2.3.C) below: BlendedMVS (https://github.com/YoYo000/BlendedMVS);
+See (2.3.D) below: Waymo (https://waymo.com/open/);
+
+
+(2.3.A) CO3Dv2, is made available under the following license (CC BY NC 4.0): 
+https://github.com/facebookresearch/co3d/blob/main/LICENSE
+
+(2.3.B) ScanNet++, is made available under the following license (ScanNet++ Terms of Use):
+https://kaldir.vc.in.tum.de/scannetpp/static/scannetpp-terms-of-use.pdf
+
+(2.3.C) BlendedMVS, is made available under the following license (CC BY 4.0): 
+https://github.com/YoYo000/BlendedMVS
+
+(2.3.D) Waymo, is made available under the following license (Waymo Dataset License Agreement for Non-Commercial Use (March 2025)): 
+https://waymo.com/open/terms/
+
