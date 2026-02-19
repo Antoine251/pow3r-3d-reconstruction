@@ -62,9 +62,11 @@ def load_calibration(calib_path):
     for pose_name, pose_data in calib['camera_poses'].items():
         R = np.array(pose_data['R'], dtype=np.float64)
         T = np.array(pose_data['T'], dtype=np.float64)
+        # Calibration stores world-to-cam: p_camN = R @ p_cam1 + T
+        # Invert to get cam-to-world: position = -R^T @ T, orientation = R^T
         c2w = np.eye(4, dtype=np.float64)
-        c2w[:3, :3] = R
-        c2w[:3, 3] = T
+        c2w[:3, :3] = R.T
+        c2w[:3, 3] = -R.T @ T
         if '_to_' not in pose_name:
             cam_name = pose_name
         else:
@@ -76,7 +78,7 @@ def load_calibration(calib_path):
     return cameras, poses_c2w
 
 
-ENDOSCOPE_TO_CAM = {1: 4, 2: 3, 3: 2, 4: 1}
+ENDOSCOPE_TO_CAM = {1: 1, 2: 2, 3: 3, 4: 4}
 
 
 def get_camera_index(filename):
@@ -421,7 +423,7 @@ def parse_args():
     parser.add_argument('--schedule', type=str, default='linear',
                         choices=['linear', 'cosine'],
                         help='Learning rate schedule for global alignment')
-    parser.add_argument('--niter', type=int, default=1200,
+    parser.add_argument('--niter', type=int, default=300,
                         help='Number of iterations for global alignment')
     parser.add_argument('--min_conf_thr', type=float, default=3.0,
                         help='Minimum confidence threshold for filtering')
