@@ -1,0 +1,358 @@
+{
+  "cameras": {
+    "cam1": {
+      "model": "standard",
+      "image_size": [
+        640,
+        480
+      ],
+      "K": [
+        [
+          831.4092809357857,
+          0.0,
+          303.34386553779086
+        ],
+        [
+          0.0,
+          780.3137617412925,
+          219.92612727429687
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "dist": [
+        [
+          0.32912483090843037,
+          -2.860442602864053,
+          0.01096567384517829,
+          0.0065084949523940335,
+          3.6842742039732546
+        ]
+      ]
+    },
+    "cam2": {
+      "model": "standard",
+      "image_size": [
+        640,
+        480
+      ],
+      "K": [
+        [
+          814.3975414171341,
+          0.0,
+          309.0046072822448
+        ],
+        [
+          0.0,
+          765.4023482161645,
+          220.88601602221473
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "dist": [
+        [
+          0.23181711151969406,
+          -2.16834274573341,
+          0.005853783929835475,
+          -0.0056256186675106255,
+          7.857029115740166
+        ]
+      ]
+    },
+    "cam3": {
+      "model": "standard",
+      "image_size": [
+        640,
+        480
+      ],
+      "K": [
+        [
+          820.7203975824601,
+          0.0,
+          345.36758768330435
+        ],
+        [
+          0.0,
+          769.531465806953,
+          173.9809416525341
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "dist": [
+        [
+          0.10348011726121573,
+          0.7561056592253881,
+          0.0030647525172181576,
+          -0.007057024955602208,
+          -9.981551283309988
+        ]
+      ]
+    },
+    "cam4": {
+      "model": "standard",
+      "image_size": [
+        640,
+        480
+      ],
+      "K": [
+        [
+          805.474899580069,
+          0.0,
+          374.6495665340721
+        ],
+        [
+          0.0,
+          752.1127166251852,
+          228.2362193651278
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "dist": [
+        [
+          0.08746370155267962,
+          0.553112975928447,
+          0.011562962949650708,
+          0.03547387257296239,
+          -2.479255353568616
+        ]
+      ]
+    }
+  },
+  "camera_poses": {
+    "cam1": {
+      "R": [
+        [
+          1.0,
+          1.8129498621284062e-35,
+          0.0
+        ],
+        [
+          1.1841851280518321e-35,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "T": [
+        1.572483343301531e-53,
+        0.0,
+        0.0
+      ]
+    },
+    "cam2_to_cam1": {
+      "R": [
+        [
+          -0.9998446244722268,
+          0.0039525333042919894,
+          -0.017178602809022527
+        ],
+        [
+          -0.016543088324754655,
+          0.12612820485679158,
+          0.9918760014075761
+        ],
+        [
+          0.006087129263541269,
+          0.9920060752939374,
+          -0.12604322051283537
+        ]
+      ],
+      "T": [
+        0.000447939721890855,
+        -0.07745486065873734,
+        0.08932670576241804
+      ]
+    },
+    "cam3_to_cam1": {
+      "R": [
+        [
+          -0.06710284980600649,
+          0.6963218081897079,
+          -0.7145859969152262
+        ],
+        [
+          -0.634317728545417,
+          0.5230583624347224,
+          0.5692547485441725
+        ],
+        [
+          0.7701546771921176,
+          0.4914731823065443,
+          0.4065905609733004
+        ]
+      ],
+      "T": [
+        0.05474687830453726,
+        -0.03941755246198025,
+        0.04786289775150207
+      ]
+    },
+    "cam4_to_cam1": {
+      "R": [
+        [
+          0.010705361086660972,
+          -0.698016776472551,
+          0.7160013791934153
+        ],
+        [
+          0.6392917321631111,
+          0.5553669038356284,
+          0.5318587061541034
+        ],
+        [
+          -0.7688897687132359,
+          0.452040022439271,
+          0.4521817573511895
+        ]
+      ],
+      "T": [
+        -0.06236645986849289,
+        -0.03999714034876504,
+        0.0405008636088544
+      ]
+    }
+  },
+  "image_sets": {
+    "rgb": [
+      {
+        "cam1": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam1/extrinsic/00000_endoscope.png",
+        "cam2": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam2/extrinsic/00000_endoscope.png",
+        "cam3": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam3/extrinsic/00000_endoscope.png",
+        "cam4": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam4/extrinsic/00000_endoscope.png"
+      },
+      {
+        "cam1": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam1/extrinsic/00001_endoscope.png",
+        "cam2": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam2/extrinsic/00001_endoscope.png",
+        "cam3": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam3/extrinsic/00001_endoscope.png",
+        "cam4": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam4/extrinsic/00001_endoscope.png"
+      },
+      {
+        "cam1": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam1/extrinsic/00002_endoscope.png",
+        "cam2": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam2/extrinsic/00002_endoscope.png",
+        "cam3": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam3/extrinsic/00002_endoscope.png",
+        "cam4": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam4/extrinsic/00002_endoscope.png"
+      },
+      {
+        "cam1": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam1/extrinsic/00003_endoscope.png",
+        "cam2": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam2/extrinsic/00003_endoscope.png",
+        "cam3": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam3/extrinsic/00003_endoscope.png",
+        "cam4": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam4/extrinsic/00003_endoscope.png"
+      },
+      {
+        "cam1": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam1/extrinsic/00004_endoscope.png",
+        "cam2": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam2/extrinsic/00004_endoscope.png",
+        "cam3": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam3/extrinsic/00004_endoscope.png",
+        "cam4": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam4/extrinsic/00004_endoscope.png"
+      },
+      {
+        "cam1": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam1/extrinsic/00005_endoscope.png",
+        "cam2": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam2/extrinsic/00005_endoscope.png",
+        "cam3": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam3/extrinsic/00005_endoscope.png",
+        "cam4": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam4/extrinsic/00005_endoscope.png"
+      },
+      {
+        "cam1": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam1/extrinsic/00006_endoscope.png",
+        "cam2": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam2/extrinsic/00006_endoscope.png",
+        "cam3": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam3/extrinsic/00006_endoscope.png",
+        "cam4": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam4/extrinsic/00006_endoscope.png"
+      },
+      {
+        "cam1": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam1/extrinsic/00007_endoscope.png",
+        "cam2": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam2/extrinsic/00007_endoscope.png",
+        "cam3": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam3/extrinsic/00007_endoscope.png",
+        "cam4": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam4/extrinsic/00007_endoscope.png"
+      },
+      {
+        "cam1": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam1/extrinsic/00008_endoscope.png",
+        "cam2": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam2/extrinsic/00008_endoscope.png",
+        "cam3": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam3/extrinsic/00008_endoscope.png",
+        "cam4": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam4/extrinsic/00008_endoscope.png"
+      },
+      {
+        "cam1": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam1/extrinsic/00009_endoscope.png",
+        "cam2": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam2/extrinsic/00009_endoscope.png",
+        "cam3": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam3/extrinsic/00009_endoscope.png",
+        "cam4": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam4/extrinsic/00009_endoscope.png"
+      },
+      {
+        "cam1": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam1/extrinsic/00010_endoscope.png",
+        "cam2": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam2/extrinsic/00010_endoscope.png",
+        "cam3": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam3/extrinsic/00010_endoscope.png",
+        "cam4": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam4/extrinsic/00010_endoscope.png"
+      },
+      {
+        "cam1": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam1/extrinsic/00011_endoscope.png",
+        "cam2": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam2/extrinsic/00011_endoscope.png",
+        "cam3": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam3/extrinsic/00011_endoscope.png",
+        "cam4": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam4/extrinsic/00011_endoscope.png"
+      },
+      {
+        "cam1": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam1/extrinsic/00012_endoscope.png",
+        "cam2": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam2/extrinsic/00012_endoscope.png",
+        "cam3": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam3/extrinsic/00012_endoscope.png",
+        "cam4": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam4/extrinsic/00012_endoscope.png"
+      },
+      {
+        "cam1": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam1/extrinsic/00013_endoscope.png",
+        "cam2": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam2/extrinsic/00013_endoscope.png",
+        "cam3": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam3/extrinsic/00013_endoscope.png",
+        "cam4": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam4/extrinsic/00013_endoscope.png"
+      },
+      {
+        "cam1": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam1/extrinsic/00014_endoscope.png",
+        "cam2": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam2/extrinsic/00014_endoscope.png",
+        "cam3": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam3/extrinsic/00014_endoscope.png",
+        "cam4": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam4/extrinsic/00014_endoscope.png"
+      },
+      {
+        "cam1": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam1/extrinsic/00015_endoscope.png",
+        "cam2": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam2/extrinsic/00015_endoscope.png",
+        "cam3": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam3/extrinsic/00015_endoscope.png",
+        "cam4": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam4/extrinsic/00015_endoscope.png"
+      },
+      {
+        "cam1": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam1/extrinsic/00016_endoscope.png",
+        "cam2": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam2/extrinsic/00016_endoscope.png",
+        "cam3": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam3/extrinsic/00016_endoscope.png",
+        "cam4": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam4/extrinsic/00016_endoscope.png"
+      },
+      {
+        "cam1": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam1/extrinsic/00017_endoscope.png",
+        "cam2": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam2/extrinsic/00017_endoscope.png",
+        "cam3": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam3/extrinsic/00017_endoscope.png",
+        "cam4": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam4/extrinsic/00017_endoscope.png"
+      },
+      {
+        "cam1": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam1/extrinsic/00018_endoscope.png",
+        "cam2": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam2/extrinsic/00018_endoscope.png",
+        "cam3": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam3/extrinsic/00018_endoscope.png",
+        "cam4": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam4/extrinsic/00018_endoscope.png"
+      },
+      {
+        "cam1": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam1/extrinsic/00019_endoscope.png",
+        "cam2": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam2/extrinsic/00019_endoscope.png",
+        "cam3": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam3/extrinsic/00019_endoscope.png",
+        "cam4": "/home/iti-lab/ros2_ws/src/endoscope_processing/resource/calibration_images/cam4/extrinsic/00019_endoscope.png"
+      }
+    ]
+  }
+}

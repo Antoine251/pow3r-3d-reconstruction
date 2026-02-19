@@ -32,9 +32,11 @@ def load_calibration(path):
     for pose_name, pose_data in calib['camera_poses'].items():
         R = np.array(pose_data['R'], dtype=np.float64)
         T = np.array(pose_data['T'], dtype=np.float64)
+        # Calibration stores world-to-cam: p_camN = R @ p_cam1 + T
+        # Invert to get cam-to-world
         c2w = np.eye(4)
-        c2w[:3,:3] = R
-        c2w[:3,3] = T
+        c2w[:3,:3] = R.T
+        c2w[:3,3] = -R.T @ T
         cam_name = pose_name.split('_to_')[0]
         poses_c2w[cam_name] = c2w
 
@@ -126,7 +128,7 @@ def render_plot(calibration, depth):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--calibration', default='model/calibration.json')
+    parser.add_argument('--calibration', default='dataset_v2/calibration.json')
     parser.add_argument('--depth', type=float, default=0.03)
     args = parser.parse_args()
 
