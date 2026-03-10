@@ -1,0 +1,36 @@
+\resizebox{\linewidth}{!}{
+\begin{tabular}{l@{}c@{~~~}|r@{~~~}rr@{~~~}rr@{~~~}rr@{}rr@{~~~}r|r@{~~~}r}
+\toprule
+\multirow{2}{*}{Method} & GT & \multicolumn{2}{c}{KITTI} & \multicolumn{2}{c}{ScanNet} & \multicolumn{2}{c}{ETH3D} & \multicolumn{2}{c}{DTU} & \multicolumn{2}{c|}{T\&T} & \multicolumn{2}{c}{\bf{Average}} \\
+ & range & rel$\downarrow$ & $\tau\uparrow$ & rel$\downarrow$ & $\tau\uparrow$ & rel$\downarrow$ & $\tau\uparrow$ & rel$\downarrow$ & $\tau\uparrow$ & rel$\downarrow$ & $\tau\uparrow$ & rel$\downarrow$ & $\tau\uparrow$ \\
+\midrule
+COLMAP~\cite{schonberger2016structure,schonberger2016pixelwise} (K+RT) & $\times$ & 12.0 & {\bf 58.2} & 14.6 & 34.2 &{ 16.4}&{55.1}&{\bf 0.7}&{\bf 96.5}&{\bf 2.7}& {\bf 95.0} &{ 9.3} & { 67.8} \\
+{\small COLMAP Dense~\cite{schonberger2016structure,schonberger2016pixelwise} (K+RT)} & $\times$ & 26.9 & 52.7 & 38.0 & 22.5 & 89.8 & 23.2 & 20.8 & 69.3 & 25.7 & 76.4 & 40.2 & 48.8 \\
+
+MVSNet~\cite{yao2018mvsnet} (K+RT) & $\checkmark$ & 18.6 & 30.7 & 22.7 & 20.9 & 21.6 & 35.6 & (1.8) & $(86.7)$ & 6.5 & 74.6 & 14.2 & 49.7 \\
+
+Vis-MVSNet~\cite{zhang2020visibility} (K+RT) & $\checkmark$ & 9.5 & \un{55.4}& 8.9 & 33.5 &{ 10.8}& 43.3 &{(1.8)} &{(87.4)} &{4.1}& \un{87.2} &{7.0} &{61.4} \\
+
+MVS-Former++~\cite{cao2024mvsformer++} (K+RT) & $\checkmark$ & 29.2 & 15.2 & 15.2 & 21.9 & 21.4 & 32.5 & ({1.2}) & ({ 91.9}) & 7.6 & 71.5 & 14.9 & 46.6  \\
+CER-MVS~\cite{cermvs} (K+RT) & $\times$ & 14.3 & 32.2 & 21.1 & 24.3 & 11.7 & 47.5 &  4.1 & 71.3 &  6.4 &  82.1 & 11.5 & 51.5 \\
+
+\midrule
+ \duster{}~\cite{wang2024dust3r} & $\times$ &               5.4 & 49.5 & \bf (3.1) & \bf (71.8) & 3.0 & \un{76.0} & 3.9 & 68.6 & 3.3 & 75.1 & 3.7 & 68.2 \\
+
+ \textbf{\ours{}} & $\times$ &                5.7 & 45.7 & (3.2) & (68.8) & 3.0 & 74.7 & 3.0 & 74.3 & 3.3 & 76.6 & 3.6 & 68.0 \\
+ \textbf{\ours{} w/ RT} & $\times$ &       5.7 & 45.8 & (3.2) & (69.7) & \un{2.9} & 75.6 & 3.3 & 71.6 & \un{3.2} & 77.9 & 3.7 & 68.1 \\
+ \textbf{\ours{} w/ K} & $\times$ &  \bf 5.3 & 48.3 & (\textbf{3.1}) & (70.8) & \un{2.9} & \un{76.0} & 1.6 & 89.9 & \un{3.2} & 77.3 & \bf 3.2 & \un{72.5} \\
+ \textbf{\ours{} w/ K+RT} & $\times$ &   \textbf{5.3} & {48.7} & (\textbf{3.1}) & (\un{71.4}) & \textbf{2.8} & \textbf{77.1} & \un{1.5} & \un{91.1} & \un{3.2} & 78.2 & \bf{3.2} & \textbf{73.3} \\
+
+\bottomrule
+\end{tabular}}
+\vspace{-0.3cm}
+\normalsize
+\captionof{table}{
+\textbf{Multi-view depth evaluation:} \ours{} with both pose and intrinsics performs better than \duster{}. More comparisons with the state of the art can be found in the supplementary material.
+(Parentheses) denote training on data from the same domain. 
+}
+\label{tab:mvd}
+
+
+

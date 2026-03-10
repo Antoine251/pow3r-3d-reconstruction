@@ -1,0 +1,76 @@
+\documentclass[10pt,twocolumn,letterpaper]{article}
+
+\usepackage[pagenumbers]{cvpr}              %
+
+\input{preamble}
+
+\definecolor{cvprblue}{rgb}{0.21,0.49,0.74}
+\usepackage[pagebackref,breaklinks,colorlinks,allcolors=cvprblue]{hyperref}
+
+\usepackage{bbding} %
+\usepackage{multirow}
+\usepackage{rotating}
+\usepackage{units}
+
+
+\def\paperID{932} %
+\def\confName{CVPR}
+\def\confYear{2025}
+
+\title{\ours{}: Empowering Unconstrained 3D\\Reconstruction with Camera and Scene Priors}
+
+\author{
+Wonbong Jang\textsuperscript{*} \quad Philippe Weinzaepfel\textsuperscript{†} \quad Vincent Leroy\textsuperscript{†} \\
+Lourdes Agapito\textsuperscript{*} \quad Jerome Revaud\textsuperscript{†} \\[0.1cm]
+\textsuperscript{*}UCL \qquad \textsuperscript{†}Naver Labs Europe \\[-0.1cm]
+{\tt\small \{ucabwja,l.agapito\}@ucl.ac.uk} \quad
+{\tt\small firstname.lastname@naverlabs.com}
+}
+
+\begin{document}
+\twocolumn[{%
+\renewcommand\twocolumn[1][]{#1}%
+\maketitle
+\vspace{-0.8cm}
+\begin{center}
+    \captionsetup{type=figure}
+    \includegraphics[width=\linewidth,trim=0 250 0 0,clip]{figures/pow3r_teaser.pdf}  \\[-0.3cm]
+    \captionof{figure}{
+    \textbf{Qualitative comparison} of raw 3D reconstructions between \duster{} and \ours{} for the image pair on the left. \duster{} cannot leverage auxiliary information potentially available at test time, resulting in noisy and low-resolution estimates, whereas \ours{} allows to inject such priors at test time in a versatile manner, enabling new capabilities such as high-resolution processing as a direct by-product. 
+    }
+    \vspace{-0.01cm}
+    \label{fig:qualiCC}
+\end{center}
+}]
+
+
+\input{sec/0_abstract}    
+\input{sec/1_intro}
+\input{sec/2_related}
+\input{sec/3_method}
+\input{sec/4_experiments}
+
+\section{Conclusion}
+
+We have presented \ours{}, a novel approach to guide large 3D vision models, \eg~\duster{}, with camera and scene priors in an implicit manner.  
+Not only does it results in consistent gains whenever auxiliary information is available, but it also unlocks new capabilities such as high-resolution processing and sparse-to-dense depth completion.
+
+
+
+{
+    \small
+    \bibliographystyle{ieeenat_fullname}
+    \bibliography{main}
+}
+
+
+\appendix
+\renewcommand{\thefigure}{\Alph{figure}}
+\renewcommand{\thetable}{\Alph{table}}
+\setcounter{figure}{0} % Reset figure counter
+\setcounter{table}{0}  % Reset table counter
+
+\input{sec/X_suppl}
+
+
+\end{document}

@@ -1,0 +1,45 @@
+\section{Introduction}
+\label{sec:intro}
+
+Building general models for 3D perception that can unify different 3D vision tasks such as depth estimation, keypoint matching, dense reconstruction or camera pose prediction, remains a complex and exciting open challenge. 
+Traditional Structure from Motion (SfM) approaches such as COLMAP~\cite{schonberger2016structure} %
+do not apply pre-learned priors, so each scene must be optimized independently. 
+On the other hand, most learning-based approaches focus on specific 3D vision tasks 
+such as depth completion~\cite{completionformer2023, rho2022guideformer}, monocular and stereo depth estimation~\cite{,piccinelli2024unidepth}, pose estimation~\cite{wang2023posediffusion, raydiffusion} or novel view synthesis~\cite{mildenhall2021nerf, kerbl20233d}. While these dedicated approaches have been successful to some extent, this trend contrasts with other domains such as natural language processing where a single model like ChatGPT~\cite{openai2024chatgpt4}, trained with a vast collection of data, solves a range of different tasks without requiring re-training.
+While some models like CroCo-v2, DINOv2 or Stable Diffusion~\cite{darcet2023dinov2, Rombach_2022_CVPR, weinzaepfel2023croco}, trained on large image datasets, have served as learned priors for other tasks, including 3D vision ones, they are still far from multi-purpose foundation models like ChatGPT is for NLP.
+
+\duster{}~\cite{wang2024dust3r} marked a significant step forward in regression-based 3D foundation models. 
+\duster{} performs 3D dense reconstruction from uncalibrated and unposed images, solving many downstream vision tasks at once  without the need for fine-tuning. Its success can be attributed to two main factors: (\emph{i}) its use of a pointmap representation, which provides flexibility over its output space and enables to regress camera parameters, poses and depth easily and (\emph{ii}) its use of a transformer architecture that exploits powerful pretraining combined with a vast amount of 3D training data. 
+{Despite its huge success, \duster{}~\cite{wang2024dust3r} and its successor \master{}~\cite{leroy2024mast3r} are extremely limited in terms of their input space, \ie they only take RGB images.} 
+Yet, in practice, many real-world applications \emph{do} provide extra modalities such that calibrated camera intrinsics, sparse or dense depth from RGB-D sensors or LIDAR, \etc.
+This raises the question of how best to exploit additional input modalities, and whether this not just boosts performance but also enables new capabilities, such as obtaining the full depth from sparse point clouds of SfM or LiDAR.
+
+In this paper, we introduce \ours{}, a new 3D feed-forward model that empowers DUSt3R with any subset of priors available at test time such as camera intrinsics, sparse or dense depth, or relative camera poses.
+Each modality is injected into the network in a lightweight fashion. To allow the model to operate under different conditions at test time, random subsets of input modalities are fed at each training iteration.  
+As a result, we obtain a single model that performs on par with DUSt3R when no prior information is available but outperforms it when it exists.
+Our model also gains new capabilities as a by-product: for instance, the camera intrinsics input allow to process images whose principal point is far from the center, thus allowing to perform extreme cropping, \eg for performing sliding window inference. As a side contribution, our model directly outputs the pointmaps of the second image in its coordinate system, allowing faster relative pose estimation. To sum up, our contributions are:
+\begin{itemize}
+    \item \ours{} is a holistic 3D geometric vision model capable of taking any subset (including none) of camera intrinsics, pose and depthmaps with corresponding input images.
+    \item Extensive experiments demonstrate an important boost in performance over \duster{} which cannot exploit priors, yielding state-of-the-art results in three benchmarks. %
+    \item By predicting the same pointmaps in two different camera coordinate systems, we can achieve more accurate relative pose, orders of magnitude faster.
+\end{itemize}
+
+
+
+
+
+
+    
+
+
+
+
+
+
+
+    
+
+
+
+
+

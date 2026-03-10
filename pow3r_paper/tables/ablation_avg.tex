@@ -1,0 +1,60 @@
+\begin{table}[]
+    \centering
+    \resizebox{\linewidth}{!}{
+    \begin{tabular}{l@{~}cc|ccc@{~~}cc@{~~}c|c}
+    \toprule
+   \multirow{2}{*}{Method} & with & {\small Single} & Focal & Depth & \multicolumn{2}{c}{RRA@2} & \multicolumn{2}{c|}{RTA@2} & \multirow{2}{*}{Avg.} \\
+    & $X^{2,2}$ & {\small Forward} & {\small acc@1.015} & $\tau$@1.03 & (Pro) & (PnP) & (Pro) & (PnP) & \\
+    \midrule
+    DUSt3R & $\times$ & $\times$ & 36.8 & 85.4 & 69.2 & 72.4 & 49.8 & 57.3 & 60.5 \\
+    \multirow{2}{*}{DUSt3R-ft} & \checkmark & $\times$ & 38.9 & 79.1 & 71.7 & 74.4 & 52.9 & 59.2 & 62.7 \\
+    & \checkmark & \checkmark & 38.3 & 78.5 & 73.1 & 74.4 & 56.3 & 59.2 & 63.3 \\
+    \midrule
+    \multirow{3}{*}{\textbf{\ours{}}} & $\times$ & $\times$ & 66.0 & 85.7 & 81.9 & 83.8 & 68.6 & 73.3 & 76.5 \\
+     & \checkmark & $\times$ & \textbf{67.2} & \textbf{86.1} & 82.9 & 84.7 & 70.0 & \textbf{74.6} & 77.6 \\
+     & \checkmark & \checkmark & 64.8 & 85.0 & \textbf{84.2} & \textbf{84.7} & \textbf{73.0} & \textbf{74.6} & \textbf{77.7} \\
+    \bottomrule
+    \end{tabular}}
+    \vspace{-0.3cm}    
+    \caption{\textbf{Impact of regressing $X^{2,2}$.} %
+    Metrics (in \%)
+     on Habitat
+    are averaged over all combinations of input modalities.
+    The `with $X^{2,2}$' column denotes methods trained to predict it. `Single forward' denotes evaluations of models based on $X^{2,2}$ prediction, \ie, in a single forward pass, instead of forwarding image pairs and their swapped versions. %
+    The top part shows the original DUSt3R, or finetune (-ft) with $X^{2,2}$ prediction.
+    }
+    \label{tab:ablation}
+    \vspace{-0.1cm}
+\end{table}
+
+
+\begin{table}[]
+    \centering
+    \resizebox{\linewidth}{!}{
+    \begin{tabular}{lc|ccc@{~~}cc@{~~}c|c}
+    \toprule
+   \multirow{2}{*}{Arch.} & Extra & Focal & Depth & \multicolumn{2}{c}{RRA@2} & \multicolumn{2}{c|}{RTA@2} & \multirow{2}{*}{Avg.} \\
+    & Params & {\small acc@1.015} & $\tau$@1.03 & (Pro) & (PnP) & (Pro) & (PnP) & \\
+    \midrule
+    Embed & 16.0M & 64.7 & 84.7 & 84.1 & 84.5 & 72.8 & 73.8 & 77.4 \\
+    \textbf{Inject1} & 22.6M & 64.8 & 85.0 & 84.2 & 84.7 & 73.0 & 74.6 & 77.7 \\
+     Inject4 & 42.3M & \textbf{65.9} & \textbf{85.1} & \textbf{84.8} & \textbf{85.2} & \textbf{73.7} & \textbf{75.4} & \textbf{78.3} \\  
+    \bottomrule
+    \end{tabular}}
+    \vspace{-0.3cm}    
+    \caption{\textbf{Architecture ablation}. %
+    Results (in \%), on Habitat, 
+    are averaged over all combinations of input modalities.
+    We compare the injection architecture for different number of blocks with the `embed' architecture in which the extra signals are added before the transformer blocks. `Inject1' offers a good compromise between performance and number of extra parameters. 
+    }
+    \label{tab:ablation_arch}
+    \vspace{-0.3cm}
+\end{table}
+
+
+
+
+
+
+
+

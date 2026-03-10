@@ -24,11 +24,12 @@ import pow3r.tools.path_to_dust3r
 from dust3r.inference import inference
 from dust3r.image_pairs import make_pairs
 from dust3r.utils.image import load_images, rgb
-from dust3r.utils.device import to_numpy
+from dust3r.utils.device import to_numpy, todevice, to_cpu, collate_with_cat
 from dust3r.viz import add_scene_cam, CAM_COLORS, OPENGL, pts3d_to_trimesh, cat_meshes
 from dust3r.cloud_opt import global_aligner, GlobalAlignerMode
 
 from pow3r.model import Pow3R  # noqa: F401 - needed for eval(ckpt['definition'])
+from pow3r.model.inference import BaseResolver
 
 
 def load_pow3r_model(ckpt_path, device='cuda'):
@@ -46,15 +47,19 @@ def load_pow3r_model(ckpt_path, device='cuda'):
 # --------------------------------------------------------
 
 def load_calibration(calib_path):
-    """Load calibration JSON containing per-camera intrinsics, distortion, and poses."""
+    """Load calibration JSON containing per-camera intrinsics, distortion, and poses.
+    Matches test_calibration_validity.py format (handles dist flatten)."""
     with open(calib_path) as f:
         calib = json.load(f)
 
     cameras = {}
     for cam_name, cam_data in calib['cameras'].items():
+        dist = np.array(cam_data['dist'], dtype=np.float64)
+        if dist.ndim > 1:
+            dist = dist.flatten()
         cameras[cam_name] = {
             'K': np.array(cam_data['K'], dtype=np.float64),
-            'dist': np.array(cam_data['dist'], dtype=np.float64),
+            'dist': dist,
             'image_size': tuple(cam_data['image_size']),
         }
 
@@ -62,15 +67,11 @@ def load_calibration(calib_path):
     for pose_name, pose_data in calib['camera_poses'].items():
         R = np.array(pose_data['R'], dtype=np.float64)
         T = np.array(pose_data['T'], dtype=np.float64)
-        # Calibration stores world-to-cam: p_camN = R @ p_cam1 + T
-        # Invert to get cam-to-world: position = -R^T @ T, orientation = R^T
+        # Same convention as test_calibration_validity: invert to get cam-to-world
         c2w = np.eye(4, dtype=np.float64)
         c2w[:3, :3] = R.T
         c2w[:3, 3] = -R.T @ T
-        if '_to_' not in pose_name:
-            cam_name = pose_name
-        else:
-            cam_name = pose_name.split('_to_')[0]
+        cam_name = pose_name.split('_to_')[0] if '_to_' in pose_name else pose_name
         poses_c2w[cam_name] = c2w
 
     n_cameras = len(cameras)
@@ -194,6 +195,79 @@ def build_calibration_for_images(image_files, cameras, poses_c2w, image_size=512
     return K_list, pose_list, camera_order
 
 
+class CalibrationResolver(BaseResolver):
+    """Thin wrapper to use Pow3R model with inference_with_info (fix_rays, known poses)."""
+
+    def __init__(self, model, fix_rays='full'):
+        super().__init__(crop_resolution=(512, 512), fix_rays=fix_rays)
+        self.model = model
+
+
+def pow3r_inference_with_calibration(pairs, model, device, calib_data, batch_size=1, verbose=True):
+    """
+    Run Pow3R inference using inference_with_info with calibration (K1, K2, cam1, cam2).
+    Uses fix_rays='full' so fix_pts3d_in_other_view applies correct scale from known poses.
+    Returns same format as dust3r.inference.inference for global_aligner compatibility.
+    """
+    K_list = calib_data['K_list']
+    pose_list = calib_data['pose_list']
+    n_imgs = len(K_list)
+
+    resolver = CalibrationResolver(model, fix_rays='full').to(device)
+
+    if verbose:
+        print(f'>> Pow3R inference with calibration (fix_rays=full) on {len(pairs)} pairs')
+
+    result = []
+    for idx in range(0, len(pairs), batch_size):
+        batch_pairs = pairs[idx:idx + batch_size]
+        batch_results = []
+        for view1, view2 in batch_pairs:
+            try:
+                i = int(view1['idx'][0])
+            except (TypeError, IndexError):
+                i = int(view1['idx'])
+            try:
+                j = int(view2['idx'][0])
+            except (TypeError, IndexError):
+                j = int(view2['idx'])
+            k_idx_i = min(i, n_imgs - 1)
+            k_idx_j = min(j, n_imgs - 1)
+
+            # Keep K batched (1,3,3) and as torch tensors to follow pow3r's
+            # tensor code path in add_intrinsics (avoids numpy/tensor stacking mismatch).
+            K1 = torch.from_numpy(np.expand_dims(np.float32(K_list[k_idx_i]), axis=0)).to(device)
+            K2 = torch.from_numpy(np.expand_dims(np.float32(K_list[k_idx_j]), axis=0)).to(device)
+            # Keep poses batched (1,4,4) so pow3r's add_relpose generates a batched known_pose tensor.
+            cam1 = (
+                torch.from_numpy(np.expand_dims(np.float32(pose_list[k_idx_i]), axis=0)).to(device)
+                if pose_list is not None else None
+            )
+            cam2 = (
+                torch.from_numpy(np.expand_dims(np.float32(pose_list[k_idx_j]), axis=0)).to(device)
+                if pose_list is not None else None
+            )
+            v1 = todevice(view1, device)
+            v2 = todevice(view2, device)
+
+            with torch.no_grad():
+                pred1, pred2 = resolver.inference_with_info(
+                    v1, v2, K1=K1, K2=K2, cam1=cam1, cam2=cam2
+                )
+
+            # Ensure idx is tensor for global_aligner compatibility (base_opt expects .tolist())
+            v1_out = dict(view1)
+            v2_out = dict(view2)
+            v1_out['idx'] = torch.tensor([i], dtype=torch.long)
+            v2_out['idx'] = torch.tensor([j], dtype=torch.long)
+            batch_results.append(dict(view1=v1_out, view2=v2_out, pred1=pred1, pred2=pred2))
+
+        res = batch_results[0] if len(batch_results) == 1 else batch_results
+        result.append(to_cpu(res))
+
+    return collate_with_cat(result, lists=len(pairs) > 1)
+
+
 # --------------------------------------------------------
 # GLB export and scene extraction
 # --------------------------------------------------------
@@ -248,8 +322,7 @@ def get_3D_model_from_scene(outdir, scene, min_conf_thr=3, as_pointcloud=False,
 
     rgbimg = scene.imgs
     focals = scene.get_focals().cpu()
-    cams2world = scene.get_im_poses().cpu()
-
+    cams2world = to_numpy(scene.get_im_poses().cpu())
     pts3d = to_numpy(scene.get_pts3d())
     scene.min_conf_thr = float(scene.conf_trf(torch.tensor(min_conf_thr)))
     msk = to_numpy(scene.get_masks())
@@ -265,13 +338,13 @@ def reconstruct_scene(model, device, image_dir, image_size=512, schedule='linear
                       niter=300, min_conf_thr=3, as_pointcloud=False,
                       mask_sky=False, clean_depth=True, cam_size=0.05,
                       scenegraph_type='complete', winsize=1, refid=0,
-                      outdir='output', calibration=None):
+                      symmetrize=True, outdir='output', calibration=None, keep_pairs=None):
     """
     Full multi-view reconstruction pipeline:
     1. Load images (optionally undistort with calibration)
     2. Create pairs according to the scene graph strategy
     3. Run POW3R pairwise inference
-    4. Globally align all views (optionally preset known intrinsics/poses)
+    4. Globally align all views
     5. Export GLB
     """
     image_files = collect_images(image_dir)
@@ -307,10 +380,58 @@ def reconstruct_scene(model, device, image_dir, image_size=512, schedule='linear
     elif scenegraph_type == "oneref":
         scenegraph_type = scenegraph_type + "-" + str(refid)
 
-    pairs = make_pairs(imgs, scene_graph=scenegraph_type, prefilter=None, symmetrize=True)
-    print(f'>> Created {len(pairs)} image pairs (symmetrized)')
+    pairs = make_pairs(imgs, scene_graph=scenegraph_type, prefilter=None, symmetrize=symmetrize)
+    # KEEP_PAIRS = [(0, 1), (0, 2), (0, 3)]
+    KEEP_PAIRS = [(0, 1), (0, 2), (0, 3)] #(1, 2), (1, 3), (2, 3), (1,0), (2,0), (3,0), (2,1), (3,1), (3,2)]
+    keep_set = set(KEEP_PAIRS)  # only these orderings, no symmetric (j,i)
 
-    output = inference(pairs, model, device, batch_size=1, verbose=True)
+    def _pair_idx(v1, v2):
+        try:
+            i = int(v1['idx'][0])
+        except (TypeError, IndexError):
+            i = int(v1['idx'])
+        try:
+            j = int(v2['idx'][0])
+        except (TypeError, IndexError):
+            j = int(v2['idx'])
+        return i, j
+
+    pairs = [(v1, v2) for v1, v2 in pairs if _pair_idx(v1, v2) in keep_set]
+
+    pair_strs = []
+    for v1, v2 in pairs:
+        i, j = _pair_idx(v1, v2)
+        pair_strs.append(f'{i}-{j}')
+    print(f'>> Created {len(pairs)} image pairs' + (' (symmetrized)' if symmetrize else '') + f': {", ".join(pair_strs)}')
+
+    if calib_data is not None:
+        # Print camera position and associated image name, save images before inference
+        K_list = calib_data['K_list']
+        pose_list = calib_data['pose_list']
+        cam_order = calib_data['cam_order']
+        print('\n>> Camera positions and associated images (before inference):')
+        os.makedirs(outdir, exist_ok=True)
+        for i in range(len(imgs)):
+            img_name = os.path.basename(image_files[i])
+            pos = pose_list[i][:3, 3]
+            cam_name = cam_order[i]
+            print(f'   {cam_name}: {img_name} -> position ({pos[0]:.6f}, {pos[1]:.6f}, {pos[2]:.6f})')
+            # Save image as pow3r_inference_image_x.png
+            cam_num = cam_name.replace('cam', '')
+            arr = rgb(imgs[i]['img'])
+            if arr.ndim == 4:
+                arr = arr[0]
+            arr_uint8 = (np.clip(arr, 0, 1) * 255).astype(np.uint8)
+            arr_bgr = cv2.cvtColor(arr_uint8, cv2.COLOR_RGB2BGR)
+            out_path = os.path.join(outdir, f'pow3r_inference_image_{cam_num}.png')
+            cv2.imwrite(out_path, arr_bgr)
+            print(f'   Saved {out_path}')
+
+        output = pow3r_inference_with_calibration(
+            pairs, model, device, calib_data, batch_size=1, verbose=True
+        )
+    else:
+        output = inference(pairs, model, device, batch_size=1, verbose=True)
 
     mode = GlobalAlignerMode.PointCloudOptimizer if len(imgs) > 2 else GlobalAlignerMode.PairViewer
     print(f'>> Global alignment mode: {mode.value}')
@@ -321,28 +442,23 @@ def reconstruct_scene(model, device, image_dir, image_size=512, schedule='linear
         pose_list = calib_data['pose_list']
         n_cameras = len(set(calib_data['cam_order']))
         n_images = len(imgs)
-
         known_focals = [float(np.mean([K[0, 0], K[1, 1]])) for K in K_list]
         known_pp = [K[:2, 2] for K in K_list]
         print(f'>> Presetting {n_images} focal lengths and principal points from calibration')
         scene.preset_focal(known_focals)
         for i, pp in enumerate(known_pp):
             H, W = scene.imshapes[i]
-            scene.im_pp[i].data[:] = torch.tensor(pp, dtype=torch.float32) - torch.tensor([W / 2, H / 2])
-            if scene.verbose:
-                print(f' (setting principal point #{i} = {pp})')
-
+            print(f'>> Setting principal point #{i} = {pp} , W = {W}, H = {H}')
+            scene.im_pp[i].data[:] = (torch.tensor(pp, dtype=torch.float32) - torch.tensor([W / 2, H / 2])) / 10.0
         if pose_list is not None and n_images == n_cameras:
             known_poses = [torch.tensor(p, dtype=torch.float32) for p in pose_list]
             print(f'>> Presetting {n_images} camera poses from calibration')
             scene.preset_pose(known_poses)
-        elif pose_list is not None:
-            print(f'>> Multi-timestep scene ({n_images} images, {n_cameras} cameras): '
-                  f'intrinsics preset, poses will be estimated')
 
     if mode == GlobalAlignerMode.PointCloudOptimizer:
         lr = 0.01
-        loss = scene.compute_global_alignment(init='mst', niter=niter, schedule=schedule, lr=lr)
+        init_mode = 'known_poses' if calib_data is not None else 'mst'
+        loss = scene.compute_global_alignment(init=init_mode, niter=niter, schedule=schedule, lr=lr)
         print(f'>> Global alignment final loss: {loss}')
 
     cams2world = to_numpy(scene.get_im_poses().cpu())
@@ -401,7 +517,7 @@ def parse_args():
     parser.add_argument('--image_dir', type=str, default='./dataset/scene2',
                         help='Directory containing images to reconstruct')
     parser.add_argument('--ckpt_path', type=str,
-                        default='model/Pow3R_ViTLarge_BaseDecoder_512_linear.pth',
+                        default='models/Pow3R_ViTLarge_BaseDecoder_512_linear.pth',
                         help='Path to POW3R checkpoint')
     parser.add_argument('--calibration', type=str, default=None,
                         help='Path to calibration JSON (intrinsics, distortion, poses)')
@@ -413,17 +529,19 @@ def parse_args():
                         help='Output directory for GLB and gallery')
 
     parser.add_argument('--scenegraph_type', type=str, default='complete',
-                        choices=['complete', 'swin', 'oneref'],
-                        help='Strategy for creating image pairs')
+                        choices=['complete', 'swin', 'oneref', 'chain'],
+                        help='Strategy for creating image pairs (chain=1-2,2-3,3-4 for scale propagation)')
     parser.add_argument('--winsize', type=int, default=1,
                         help='Window size for swin scene graph')
     parser.add_argument('--refid', type=int, default=0,
-                        help='Reference image id for oneref scene graph')
+                        help='Reference image id for oneref scene graph (0=cam1)')
+    parser.add_argument('--no_symmetrize', action='store_true',
+                        help='Do not symmetrize pairs (e.g. oneref+no_symmetrize gives only 1-2, 1-3, 1-4)')
 
     parser.add_argument('--schedule', type=str, default='linear',
                         choices=['linear', 'cosine'],
                         help='Learning rate schedule for global alignment')
-    parser.add_argument('--niter', type=int, default=300,
+    parser.add_argument('--niter', type=int, default=150,
                         help='Number of iterations for global alignment')
     parser.add_argument('--min_conf_thr', type=float, default=3.0,
                         help='Minimum confidence threshold for filtering')
@@ -463,6 +581,7 @@ if __name__ == '__main__':
         scenegraph_type=args.scenegraph_type,
         winsize=args.winsize,
         refid=args.refid,
+        symmetrize=not args.no_symmetrize,
         outdir=args.outdir,
         calibration=args.calibration,
     )
