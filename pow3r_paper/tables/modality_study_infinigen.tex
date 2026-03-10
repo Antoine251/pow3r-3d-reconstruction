@@ -1,0 +1,39 @@
+\begin{table}[]
+    \centering
+    \definecolor{darkgreen}{HTML}{005701}
+    \newcommand{\withmod}{\checkmark}
+    \newcommand{\withoutmod}{$\times$}
+    \newcommand{\firstcell}[1]{#1 & }
+    \newcommand{\onediffcell}[2]{#1 & \textcolor{darkgreen}{\small (+#2)}}
+    \resizebox{\linewidth}{!}{
+    \begin{tabular}{c|c@{~~}c@{~~}c@{~~}c@{~~}c|r@{}rr@{}rr@{}rr@{}r}
+    \toprule
+     & \multicolumn{5}{c|}{aux. modalities} & \multicolumn{2}{c}{focal} & \multicolumn{2}{c}{depth} & \multicolumn{4}{c}{rel. pose} \\
+     & K1 & K2 & D1 & D2 & RT & \multicolumn{2}{c}{acc@1.015} & \multicolumn{2}{c}{$\tau$@1.03} & \multicolumn{2}{c}{RRA@2$^\circ$} & \multicolumn{2}{c}{RTA@2$^\circ$} \\
+    \midrule
+    
+    DUSt3R & \withoutmod & \withoutmod & \withoutmod & \withoutmod & \withoutmod & \firstcell{28.4} & \firstcell{75.9} & \firstcell{64.6} & \firstcell{27.2} \\
+    \midrule
+    {\textbf{\ours{}}} & \withoutmod & \withoutmod & \withoutmod & \withoutmod & \withoutmod 
+    & \firstcell{29.8} & \firstcell{75.1} & \firstcell{66.5} & \firstcell{30.4} \\
+     & \withmod & \withoutmod & \withoutmod & \withoutmod & \withoutmod & \onediffcell{60.7}{30.9} & \onediffcell{75.5}{0.4} & \onediffcell{70.3}{3.8} & \onediffcell{35.2}{4.8} \\
+     & \withoutmod & \withmod & \withoutmod & \withoutmod & \withoutmod & \onediffcell{60.5}{30.7} & \onediffcell{75.8}{0.7} & \onediffcell{70.9}{4.4} & \onediffcell{37.0}{6.6} \\
+     & \withmod & \withmod & \withoutmod & \withoutmod & \withoutmod & \onediffcell{89.8}{60.0} & \onediffcell{76.2}{1.1} & \onediffcell{73.7}{7.2} & \onediffcell{50.0}{19.6} \\
+     & \withoutmod & \withoutmod & \withmod & \withoutmod & \withoutmod & \onediffcell{34.3}{4.5} & \onediffcell{87.9}{12.8} & \onediffcell{70.9}{4.4} & \onediffcell{35.3}{4.9} \\
+     & \withoutmod & \withoutmod & \withoutmod & \withmod & \withoutmod & \onediffcell{34.3}{4.5} & \onediffcell{88.3}{13.2} & \onediffcell{71.0}{4.5} & \onediffcell{35.3}{4.9} \\
+     & \withoutmod & \withoutmod & \withmod & \withmod & \withoutmod & \onediffcell{40.9}{11.0} & \onediffcell{94.9}{19.8} & \onediffcell{74.6}{8.1} & \onediffcell{46.5}{16.1} \\
+     & \withoutmod & \withoutmod & \withoutmod & \withoutmod & \withmod & \onediffcell{34.9}{5.1} & \onediffcell{76.0}{0.9} & \onediffcell{86.6}{20.1} & \onediffcell{54.3}{23.9} \\
+     & \withmod & \withmod & \withmod & \withmod & \withoutmod & \onediffcell{98.0}{68.1} & \onediffcell{\textbf{95.4}}{\textbf{20.3}} & \onediffcell{82.2}{15.7} & \onediffcell{71.0}{40.6} \\
+     & \withmod & \withmod & \withoutmod & \withoutmod & \withmod & \onediffcell{90.6}{60.8} & \onediffcell{77.0}{1.9} & \onediffcell{91.1}{24.7} & \onediffcell{72.2}{41.8} \\
+     & \withoutmod & \withoutmod & \withmod & \withmod & \withmod & \onediffcell{50.2}{20.4} & \onediffcell{95.0}{19.9} & \onediffcell{93.0}{26.5} & \onediffcell{70.5}{40.1} \\
+     & \withmod & \withmod & \withmod & \withmod & \withmod & \onediffcell{\textbf{98.5}}{\textbf{68.6}} & \onediffcell{\textbf{95.4}}{\textbf{20.3}} & \onediffcell{\textbf{97.4}}{\textbf{30.9}} & \onediffcell{\textbf{90.2}}{\textbf{59.8}} \\
+    \bottomrule
+        \end{tabular}
+    }
+    \vspace{-0.3cm}
+    \caption{\textbf{Impact of guiding at test time} for models trained at $224{\times}224$ resolution. We report performances on InfiniGen for DUSt3R, which cannot handle auxiliary modalities, and our single model with different sets of modalities; we show in green the absolute improvement \wrt the results without auxiliary modality. 
+    }
+    \vspace{-0.2cm}
+    \label{tab:modality_study_infinigen}
+\end{table}
+

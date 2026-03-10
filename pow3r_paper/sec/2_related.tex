@@ -1,0 +1,44 @@
+\section{Related work}
+\label{sec:related}
+
+
+\myparagraph{Structure-from-Motion and MVS.} 
+SfM ~\cite{hartley2003multiple, crandall2012sfm, jiang2013global,cui2017hsfm, schonberger2016structure} builds 3D sparse maps by optimizing camera parameters using only RGB images. 
+Traditional approaches consists of handcrafted pipelines to match keypoints ~\cite{harris1988combined, lowe2004distinctive, bay2006surf, rosten2006machine, barroso2019key}, form pixel correspondences across multiple images, determine geometric relations, and perform bundle adjustment to optimize camera locations.
+Recently, SfM has incorporated learning-based approaches leveraging neural networks as components~\cite{yi2016lift, barath2023affineglue, chen2022aspanformer, lindenberger2023lightglue, sarlin2020superglue, sun2021loftr, tang2022quadtree, wang2023guiding}, but it remains brittle to outliers and challenging conditions.
+Likewise, multi-view stereo (MVS) aims to reconstruct dense 3D surface through handcrafted pipelines based on triangulation from multiple viewpoints~\cite{furukawa2015multi, galliani2015massively, schonberger2016pixelwise}.
+Learning-based approaches have also been incorporated for MVS to reconstruct 3D from few images~\cite{niemeyer2020differentiable,wiles2020synsin, yariv2020multiview, leroy2021volume, sitzmann2019srns,jang2021codenerf}, and more recently by adopting the RAFT architecture~\cite{cermvs} or using generic Transformers~\cite{cao2024mvsformer++}.
+In contrast, the recent \duster{} framework~\cite{wang2024dust3r,leroy2024mast3r}, upon which we build our approach, departs from these methods altogether by defining a simple and unified neural framework to 3D reconstruction based on the paradigm of pointmap regression.
+The idea is that, ideally, learning-based MVS should be capable of reconstructing 3D from a few images without strictly requiring the availability of camera parameters.
+
+\myparagraph{Guiding 3D.} 
+In this paper, we refer to \emph{guidance} as the notion that a method can  \emph{optionally} take in 3D priors (typically camera parameters or sparse depth) to help with some prediction task.
+This can take different forms in the vast literature of 3D vision works.
+COLMAP~\cite{schonberger2016pixelwise}, for instance, can take camera parameters for rectifying camera views; however, it is an optimization-based method, meaning that each scene has to be processed independently. %
+Recently, UniDepth~\cite{piccinelli2024unidepth} is a monocular depth and intrinsic estimation method capable of optionally providing camera intrinsics as additional guide to generate depthmap, with an architecture specifically handcrafted for that purpose.
+Also, depth completion models~\cite{guidenet,bpnet,yan2024tri,lrru} such as CompletionFormer~\cite{completionformer2023} take sparse depth input as guidance in order to inpaint the full depthmap, but are also typically capable of inferring depth from an image alone.
+Overall, however, there is currently no learning-based model to the best of our knowledge that guides its output by taking any subset of sparse depth, camera intrinsics and camera extrinsics.
+
+
+\myparagraph{Depth Completion.} 
+Given sparse depths and a corresponding RGB image, the task is to densify  depth by propagating sparse measurements.
+CNN-based approaches were adopted by ~\cite{ma2018self, ma2018sparse}, and ~\cite{cheng2018depth} proposed convolutional spatial propagation network (CSPN). 
+Multi-branch networks, which process RGB and sparse depth separately, were used in ~\cite{hu2021penet, nazir2022semattnet, Qiu_2019_CVPR, guidenet, wvangansbeke2019sparse, zhang2018deepdepth, rho2022guideformer, yan2023rignet}.
+CompletionFormer~\cite{completionformer2023} leverages both CNN and ViT architectures to capture both global and local features.
+Most methods focus only on the specific depth completion task from a single image and partial depth as the input, often without incorporating camera intrinsics.
+Using the pointmap representation, \ours{}, based on a ViT architecture, can complete the depth map from both RGB images and sparse point clouds, while taking relative pose or camera intrinsics as auxiliary input.
+
+
+\myparagraph{Pose Estimation from Sparse views.} 
+Learning-based approaches involve regressing relative pose, applying probabilistic methods, using energy-based or diffusion models~\cite{rockwell2022, zhang2022relpose, lin2024relpose++, balntas2017hpatches, wang2023posediffusion}.
+RayDiffusion~\cite{raydiffusion} models camera rays instead of camera parameters, applying diffusion on rays, then recovers the camera pose using DLT~\cite{abdel1971direct}.
+\duster{} discovers camera pose from pointmaps using PnP, while \ours{} predicts pointmaps in both camera coordinate frames, allowing the use of Procrustes alignment.
+
+\myparagraph{\duster{} and its developments.} \duster{}~\cite{wang2024dust3r} does not require calibrated images for 3D reconstruction, can handle extreme viewpoint changes, and deals with both single and a few images within the same framework.
+Its pointmap representation eases the training by not having to deal with camera parameters directly.
+MASt3R~\cite{leroy2024mast3r} improves \duster{} by also predicting dense local features, trained with an additional matching loss.
+Splatt3R~\cite{smart2024splatt3r} marries MASt3R with GS. %
+Spann3R~\cite{wang2024spann3r} predicts pointmaps in global coordinate and  adopts an external spatial memory that tracks relevant 3D information.
+MonST3R~\cite{zhang2024monst3r} further trains  \duster{} on dynamic scenes and generates time-varying dynamic point clouds, as well as camera intrinsics and poses from a dynamic video.
+In this work, we take a different and complementary direction and instead improve the core capabilities of \duster{}, which could benefit all aforementioned works.
+

@@ -1,0 +1,21 @@
+\resizebox{\linewidth}{!}{
+\begin{tabular}{lccc}
+\toprule
+Method & Acc.$\downarrow$ & Comp.$\downarrow$ & Overall$\downarrow$       \\
+\midrule
+\duster{}$^\dagger$~\cite{wang2024dust3r} &   2.677  &  \textbf{0.805}  & 1.741  \\ %
+\duster{} (repr.) &   2.191  &  1.598  & 1.894  \\ %
+{\bf \ours } &  2.116  &  1.370  & 1.743  \\ %
+{\bf \ours w/ K} &  1.722  &  1.119  & 1.420  \\ %
+{\bf \ours w/ Rt } &  2.205 & 1.429 & 1.817  \\ %
+{\bf \ours w/ K+RT } &  \textbf{1.384} & 0.846 & \textbf{1.115}  \\ %
+\bottomrule
+\end{tabular}
+}
+\normalsize
+\vspace{-0.3cm}
+\captionof{table}{
+\textbf{MVS results} with the accuracy, completeness and their average (in mm) on the DTU dataset. 
+\duster{}$^\dagger$ means results from the original paper, and `repr.' means reproduced with the official public codebase and checkpoint.
+\label{tab:mvs_dtu}
+}

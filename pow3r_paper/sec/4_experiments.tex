@@ -1,0 +1,217 @@
+\section{Experimental Evaluation}
+\label{sec:xps}
+
+
+
+\input{tables/modality_study}
+
+
+
+We first study the impact of auxiliary information guidance  (\cref{sec:xp_guiding}). 
+We then experiment across many 3D vision tasks (\cref{sec:xp_mvd,sec:xp_mvds,sec:xp_mvstereo}) without retraining, \ie mostly zero-shot settings. We finally present some ablations in \cref{sec:ablations}.
+
+\myparagraph{\duster{} baseline.}
+We point out that our overall training data, protocols and architecture are exactly the same as \duster{}, except for the additional head that predict $\X{2}{2}$ (+0.1\% parameters) and for the modules used for injecting the auxiliary information (+4\% parameters for the \inject{1} variant that we use unless stated otherwise). 
+
+
+\myparagraph{Metrics.}
+When evaluating focal lengths, we report the accuracy for a tight relative error threshold of 1.5\%.
+For evaluating depthmap, we report the Absolute Relative Error (rel) and the Inlier Ratio ($\tau$) at a threshold of 3\%.
+When evaluating poses, we opt for scale-invariant metrics and measure the relative rotation and translation accuracies (RRA and RTA resp.) of the relative pose at task-specific thresholds, and the mean Average Accuracy (mAA), defined as the area under the curve accuracy of the angular differences at min(RRA, RTA). %
+
+
+
+
+\subsection{Guiding the output prediction}
+\label{sec:xp_guiding}
+
+\myparagraph{Impact of guidance.}
+We first study the impact of providing different subsets of auxiliary information in terms of downstream 3D vision performance.
+Namely, we report accuracies in \cref{tab:modality_study} for focal, depth, and rotation prediction on the Habitat validation dataset. %
+In the supplementary material, we also provide results on the Infinigen dataset~\cite{Raistrick2023Infinigen}, which is not included in our training set, and observe similar outcomes.
+We first note that in the absence of modalities, \ours{} performs slightly better than a \duster{} baseline, even though \ours{} is trained with just RGB images during a fraction of its training.
+This shows that \ours{} does not lose its native strength for unconstrained regression despite having gained more capabilities.
+
+Interestingly, we observe in \cref{tab:modality_study} the impact of each modality for each prediction task, and the synergetic effects of interacting modalities.
+For instance, the model performs better for focal length estimation with depthmaps and/or relative pose, and \ours{}'s depth prediction improves with intrinsics and/or relative pose.
+Moreover, relative pose prediction becomes more accurate with intrinsics and/or depthmap.
+Overall, the model's performance consistently improves when provided with additional camera or scene priors, demonstrating the effectiveness of \ours in handling any combination of priors in a unified fashion.
+We are not aware of any other approach that can seamlessly integrate all these priors in a learning-based method.
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{figures/depthcompletion/depth_completion_nyu_sparsity.pdf} \\[-0.4cm]
+    \caption{\textbf{Depth completion performance} on NYUd for various input depth sparsity. 
+    }
+    \vspace{-0.2cm}
+    \label{fig:depthcompletion_nyu}
+\end{figure}
+
+\myparagraph{Depth completion.}
+We also evaluate \ours{} on the depth completion task given RGB images with sparse depthmaps.
+We vary the sparsity (the ratio of pixels with known depth) %
+and demonstrate its impact on the NYUv2 dataset~\cite{SilbermanHKF12} in Figure~\ref{fig:depthcompletion_nyu}.
+Although \ours{} is not trained on the NYUv2 dataset, it still achieves state-of-the-art results for sparse depth completion.
+Our analysis indicates that the true performance of \ours{} on NYUv2  is likely underestimated due to numerous errors in the ground-truth depth annotations; further details are available in the supplementary material. %
+On the KITTI~\cite{geiger2013vision} dataset, we obtain a mean absolute error below 30cm, which is competitive with the state of the art, 
+considering that KITTI is not included in the training set.
+
+
+
+\myparagraph{High-Resolution processing.}
+With the possibility of specifying camera intrinsics, new capabilities arise.
+Namely, \ours{} can perform high-resolution pointmap regression with a simple sliding-window approach.
+We process fixed-resolution crops of the original images under the guidance of both (i) the crop information, provided in term of camera intrinsics, and (ii) a second image, itself possibly downscaled or cropped as well.
+More details are provided in \cref{sec:applications} and \cref{fig:native_ex}.
+When applied, results significantly improve compared to processing the images at 512-pixel resolution, as shown in \cref{tab:native}.
+We also compare with a naive baseline where we simply feed high-resolution images directly to \ours{}, but it dramatically fails.
+
+\begin{table}[]
+    \centering
+    \resizebox{\linewidth}{!}{
+    \begin{tabular}{lc@{~}cc|cccccc}
+    \toprule 
+     & \multicolumn{2}{c}{\small{aux. mod.}} & High- & \multicolumn{2}{c}{KITTI} & & \multicolumn{2}{c}{T\&T} & Time \\
+    \cmidrule{5-6} \cmidrule{8-9} 
+     & Ks & RT & Res. & rel$\downarrow$ & $\tau\uparrow$ &  & rel$\downarrow$ & $\tau\uparrow$ & (sec)$\downarrow$\\
+    \midrule
+    \duster{}512 & $\times$ & $\times$ & $\times$ & 5.4 & 49.5 &  & 3.3 & 75.1 & 0.13\\
+    \midrule
+    \ours{}512 & $\checkmark$ & $\checkmark$ & $\times$ & 5.3 & 48.7 &  & 3.2 & 78.2 & 0.13\\
+    \ours{}512 & $\checkmark$ & $\checkmark$ & (n) & 7.5  & 34.4 &  & 3.9 & 68.0 & 0.48\\
+    \ours{}512 & $\checkmark$ & $\checkmark$ & $\checkmark$ & \textbf{4.6} & \textbf{53.5} &  & \textbf{2.5} & \textbf{82.3} & 0.40\\
+    \bottomrule
+    \end{tabular}} \vspace{-0.3cm}
+    \caption{\textbf{Multi-view depth estimation results in high-resolution}
+        using a sliding-window scheme and providing the crop intrinsics to \ours{}. 
+        (n): naively inputting high-resolution images without downsampling to \ours{}.
+        }
+    \vspace{-0.4cm}
+    \label{tab:native}
+\end{table}
+
+
+
+\myparagraph{Camera controllability.}
+We study how \emph{controllable} are the regression outputs on 10K Habitat test pairs given arbitrary camera parameters.
+For each test pair with ground-truth focal $f$ and relative pose $P_{12}$, we purposefully input a \emph{wrong} focal (resp. relative pose) and measure the output focal $\hat{f}$ (resp. pose $\hat{P}_{12}$) as predicted from the raw pointmaps.
+Results are presented in \cref{fig:controlability} in terms of focal ratio $\nicefrac{\hat{f}}{f}$ and angle $d_{\text{geodesic}}(P_{12}, \hat{P}_{12})$.
+Interestingly, the model accepts to follow the guidance whenever it is close to the ground truth value (\ie staying close to the identity transformation) %
+but then refuses to follow it when it gets too different, showing that the model is able to somehow `judge' of the guidance's worth.
+In all cases, the output confidence clearly correlates with the agreement between the guidance and the ground truth.
+Overall, the model is thus not taking the auxiliary information at face value, and instead combines it with the other modalities (\eg RGB) it in a more subtle and informed way than what could be achieved with handcrafted methods.
+This suggests that \ours{} would be robust to noise in the auxiliary information.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.49\linewidth]{figures/controllability/fakefocal_plot_K1.pdf} 
+    \includegraphics[width=0.49\linewidth]{figures/controllability/fakefocal_plot_conf.pdf} 
+    \includegraphics[width=0.49\linewidth]{figures/controllability/fakerelpose_plot.pdf}
+    \includegraphics[width=0.49\linewidth]{figures/controllability/fakerelpose_plot_conf.pdf}
+    \\[-0.35cm]
+    \caption{\textbf{Controllability study}.
+        We study how the model reacts when presented with false focal (top) and false relative pose (bottom). We plot the input \emph{vs.} predicted camera parameters in the left column and the average confidence in the right column. Interestingly, the model seems to not take the input information at face value and instead makes an informed decision whether to use it or not, in which latter case the confidence becomes low.
+        } 
+    \label{fig:controlability}
+    \vspace{-0.25cm}
+\end{figure}
+
+
+\subsection{Multi-View Depth Estimation}
+\label{sec:xp_mvd}
+
+Following RobustMVD~\cite{schroppel2022benchmark}, performances are measured on the KITTI~\cite{geiger2013vision}, ScanNet~\cite{dai2017scannet}, ETH3D~\cite{schops2017multi}, DTU~\cite{aanaes2016large}, and Tanks and Temples~\cite{knapitsch2017tanks} datasets. %
+We report in \cref{tab:mvd} the Absolute Relative Error (rel) and Inlier Ratio ($\tau$) for each dataset when using (1) images alone, (2) images with relative poses, (3) images with camera intrinsics, and (4) images with both 
+ modalities, and provide results for more state-of-the-art methods in the supplementary material. %
+
+\myparagraph{Results}.
+\ours{} again performs roughly on par with \duster{} in the absence of auxiliary information (\eg 3.73 average error across all datasets for \duster{}-512 \vs 3.64 for \ours{}-512). 
+However, it is clear that providing auxiliary information consistently improves the depth estimates. %
+In fact, \ours{}-512 with both pose and intrinsics achieves state-of-the-art performance on the ETH3D, DTU, and Tanks and Temples datasets, as well as on average across datasets.
+Interestingly, intrinsics tend to improve performance more than the GT pose, which alone seems to have a negligible impact. 
+This might be due to the fact that camera pose primarily helps the prediction of $\X{2}{1}$, while the depthmap of this task is obtained from the $z$ axis of $\X{1}{1}$ alone.
+Still, we observe a clear synergy in providing jointly intrinsics \emph{and} relative pose.
+
+
+
+
+\begin{figure*}
+\begin{minipage}{0.65\linewidth}
+\input{tables/mvd}
+\end{minipage} \hfill
+\begin{minipage}{0.33\linewidth}
+\input{tables/MVS_DTU}
+\end{minipage}
+\vspace{-0.3cm}
+\end{figure*}
+
+\subsection{Multi-View Stereo}
+\label{sec:xp_mvstereo}
+
+
+We evaluate the quality of global 3D reconstructions on the DTU~\cite{aanaes2016large} benchmark in the presence and absence of auxiliary information.
+For each subset of available information from $\{(K_1,K_2),P_{12}\}$, we extract pairwise predictions from image pairs and align them in a global coordinate system, as described in Sec \ref{sec:applications}.
+Performance is evaluated in terms of accuracy, which is the smallest Euclidean distance to the ground-truth, and completeness as the smallest distance to the reconstructed shape, with the overall average.
+
+\myparagraph{Results} 
+are presented in \cref{tab:mvs_dtu}. 
+We first attempt at reproducing the original \duster{} results using the official codebase and obtain slightly worse results than reported in~\cite{wang2024dust3r}.
+Using the same codebase, \ours{} with RGB only is able to improve over these and match the original results.
+Interestingly, adding ground-truth intrinsics results in a significant boost (19\% rel. improvement), but adding the camera poses instead slightly \emph{degrades} the results (-4\%).
+However, using both intrinsics and pose results in a major improvement (36\% rel. improvement), demonstrating a synergetic effect between both modalities.
+We hypothesize that the pose is of little value for easy cases like DTU, and that it does not help the model to properly resolve the focals.
+
+
+\begin{table}[]
+    \centering
+    \resizebox{\linewidth}{!}{\input{tables/multiview_pose}}
+    \vspace{-0.3cm}
+    \caption{\textbf{Multiview pose estimation on the CO3Dv2 and RealEstate10K.} 
+    (a) denotes multiview methods, while (b) denotes pairwise methods.
+    \ours{} with Procrustes alignment (Pro) performs better than \duster{} (PnP) and other multi-view based pose estimation approaches, and even more so with known intrinsics, while being much faster. 
+    RealEstate10K is not in the training set.
+    }
+    \label{tab:multiview}
+    \vspace{-0.5cm}
+\end{table}
+
+\subsection{Multi-View Pose estimation}
+\label{sec:pose}
+\label{sec:xp_mvds}
+
+We then evaluate \ours{} for the task of multi-view pose prediction on the Co3Dv2~\cite{reizenstein2021common} and RealEstate10K~\cite{realestate10K} datasets. 
+Co3Dv2 comprises over 37,000 videos across MS-COCO 51 categories with ground-truth camera derived from running COLMAP on 200 frames per video.
+RealEstate10k contains 80,000 YouTube video clips, containing indoor/outdoor scenes, with camera poses obtained via SLAM followed by Bundle Adjustment.
+For Co3Dv2, we follow the protocol of ~\cite{wang2023posediffusion} and for RealEstate10K, we use its test set of 1,800 videos. 
+For each sequence, we randomly select 10 frames and feed 45 pairs to \ours{}.
+We report the results in terms of RRA, RTA and mAA in \cref{tab:multiview}.
+
+\myparagraph{Results.} \ours{} predicts $\X{2}{2}$, allowing to estimate the relative pose between 2 images in a single forward using Procrustes Alignment (see \cref{sec:applications}). %
+In contrast, \duster{} does not output $\X{2}{2}$ and relies on PnP to obtain camera poses.
+\ours{} with PnP achieves slightly better results than \duster{} with PnP.
+Using Procrustes alignment yields similar results, while being orders of magnitude faster than RANSAC, with a roughly $10\times$ speed-up overall when combining inference and pose estimation times.
+Finally, performance improves even further with known intrinsics, significantly outperforming all the state of the art.
+
+
+
+
+\subsection{Architecture ablation}
+\label{sec:ablations}
+
+We evaluate the impact of adding the $\X{2}{2}$ prediction in \cref{tab:ablation}.
+For these ablations, models are trained on a subset of Habitat and tested on focal, depth, and relative pose prediction, with results averaged over all combinations of auxiliary modalities.
+\duster{} serves as a baseline, and \duster{}-ft is finetuned with an additional $\X{2}{2}$ head.
+This output can be used at test time to directly predict focals or relative poses, within a single forward pass, instead of having to forward both the original pair and its swapped version.
+We also report the performance, with and without predicting $\X{2}{2}$ and/or using it.
+In all cases, predicting $\X{2}{2}$ leads to slightly better performance while evaluations can be performed in a single forward pass.
+
+
+\input{tables/ablation_avg}
+
+We also explore different ways of conditioning auxiliary information in \cref{tab:ablation_arch}.
+To incorporate additional priors, \ours{} injects those embeddings into the first block of the encoder or decoder, see \cref{fig:inject}.
+We compare this approach to another design choice, where the model embeds them before going through attention blocks.
+We have also tried to perform injection in more than one block, without significant improvement while the computational cost increases.
+
+

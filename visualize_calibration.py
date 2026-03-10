@@ -72,8 +72,25 @@ LINES = [(0,1),(0,2),(0,3),(0,4),
 # Plotly Rendering
 # ------------------------------
 
+def print_camera_positions_and_distances(poses_c2w):
+    """Print camera positions and pairwise distances (like demo_pow3r_multi_view)."""
+    cam_names = sorted(k for k in poses_c2w.keys())
+    cam_positions = [poses_c2w[name][:3, 3] for name in cam_names]
+
+    print('\n>> Camera positions:')
+    for i, (name, pos) in enumerate(zip(cam_names, cam_positions)):
+        print(f'   cam #{i}: x={pos[0]:.6f}, y={pos[1]:.6f}, z={pos[2]:.6f}')
+
+    print(f'\n>> Pairwise distances:')
+    for i in range(len(cam_positions)):
+        for j in range(i + 1, len(cam_positions)):
+            dist = np.linalg.norm(cam_positions[i] - cam_positions[j])
+            print(f'   cam #{i} <-> cam #{j}: {dist:.6f}')
+
+
 def render_plot(calibration, depth):
     cameras, poses = load_calibration(calibration)
+    print_camera_positions_and_distances(poses)
     fig = go.Figure()
 
     for cam_name in sorted(cameras):
