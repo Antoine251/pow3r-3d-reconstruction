@@ -33,7 +33,7 @@ from pow3r.model import Pow3R  # noqa: F401 - needed for eval(ckpt['definition']
 
 def load_pow3r_model(ckpt_path, device='cuda'):
     """Load the base POW3R model from a checkpoint file."""
-    ckpt = torch.load(ckpt_path, map_location='cpu', weights_only=False)
+    ckpt = torch.load(ckpt_path, map_location='cuda', weights_only=False)
     model_def = ckpt['definition']
     print(f'>> Creating POW3R model = {model_def}')
     model = eval(model_def)
@@ -247,8 +247,8 @@ def get_3D_model_from_scene(outdir, scene, min_conf_thr=3, as_pointcloud=False,
         scene = scene.mask_sky()
 
     rgbimg = scene.imgs
-    focals = scene.get_focals().cpu()
-    cams2world = scene.get_im_poses().cpu()
+    focals = scene.get_focals()
+    cams2world = scene.get_im_poses()
 
     pts3d = to_numpy(scene.get_pts3d())
     scene.min_conf_thr = float(scene.conf_trf(torch.tensor(min_conf_thr)))
@@ -345,7 +345,7 @@ def reconstruct_scene(model, device, image_dir, image_size=512, schedule='linear
         loss = scene.compute_global_alignment(init='mst', niter=niter, schedule=schedule, lr=lr)
         print(f'>> Global alignment final loss: {loss}')
 
-    cams2world = to_numpy(scene.get_im_poses().cpu())
+    cams2world = to_numpy(scene.get_im_poses())
     print(f'\n>> Camera positions after alignment:')
     for i, pose in enumerate(cams2world):
         pos = pose[:3, 3]
