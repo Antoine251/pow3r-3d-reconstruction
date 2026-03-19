@@ -1,11 +1,3 @@
-# Copyright (C) 2025-present Naver Corporation. All rights reserved.
-# Licensed under CC BY-NC-SA 4.0 (non-commercial use only).
-#
-# Multi-view 3D reconstruction using POW3R, inspired by DUSt3R's demo pipeline.
-# Runs POW3R inference on all image pairs, then performs global alignment
-# to produce a coherent 3D reconstruction from multiple views.
-# Supports optional camera calibration (intrinsics, distortion, extrinsic poses).
-
 import os
 import re
 import json
@@ -19,27 +11,19 @@ from pow3r.model.inference import AsymmetricSliding
 import subprocess
 import sys
 from pow3r.model.inference import AsymmetricSliding
-#from dust3r.inference import inference
+
 
 import cv2
 import numpy as np
 import trimesh
 import matplotlib.pyplot as plt
-#from scipy.spatial.transform import Rotation
 
-#import pow3r.tools.path_to_dust3r
-#from dust3r.inference import inference
 from dust3r.image_pairs import make_pairs
 from dust3r.utils.image import load_images, rgb
 from dust3r.utils.device import to_numpy
 from dust3r.utils.device import todevice
-from dust3r.viz import add_scene_cam, CAM_COLORS #, OPENGL, pts3d_to_trimesh, cat_meshes
+from dust3r.viz import add_scene_cam, CAM_COLORS
 from dust3r.cloud_opt import global_aligner, GlobalAlignerMode
-
-#from pow3r.model import Pow3R  # noqa: F401 - needed for eval(ckpt['definition'])
-
-# import plotly.graph_objects as go
-# import gradio as gr
 
 
 def load_pow3r_model(ckpt_path, device='cpu'):
@@ -68,7 +52,7 @@ def pts3d_to_flat_valid(pts3d, conf, conf_thr=1.0, subsample=4, img=None):
     if img is not None:
         img = to_numpy(img) if hasattr(img, 'cpu') else np.asarray(img)
         if img.ndim == 3 and img.shape[0] == 3:
-            img = img.transpose(1, 2, 0)  # (3,H,W) -> (H,W,3)
+            img = img.transpose(1, 2, 0)
         colors_flat = img.reshape(-1, 3)[valid_flat]
         colors_valid = colors_flat
     if subsample > 1 and len(pts_valid) > 0:
@@ -80,107 +64,6 @@ def pts3d_to_flat_valid(pts3d, conf, conf_thr=1.0, subsample=4, img=None):
         if colors_valid is not None:
             colors_valid = colors_valid[keep]
     return pts_valid, colors_valid
-
-
-# def build_plots(output, pair_idx, conf_thr=1.0, subsample=4, show_view1=True, show_view2=True, pose_list=None):
-#     """Build two Plotly 3D figures: one RGB-colored, one red/blue by view.
-#     If pose_list is provided (calibration), transform all pts to cam0 frame for consistent orientation."""
-#     pred1, pred2 = extract_pair_data(output, pair_idx)
-#     pairs = get_pair_indices(output)
-#     img1, img2 = get_pair_images(output, pair_idx)
-#     i, j = pairs[pair_idx]
-
-#     pts1, colors1 = pts3d_to_flat_valid(
-#         pred1['pts3d'], pred1['conf'],
-#         conf_thr=conf_thr, subsample=subsample, img=img1
-#     )
-#     pts2, colors2 = pts3d_to_flat_valid(
-#         pred2['pts3d_in_other_view'], pred2['conf'],
-#         conf_thr=conf_thr, subsample=subsample, img=img2
-#     )
-
-#     # Sanity check: print pts3d scale range before transform (helps debug per-camera scale mismatch)
-#     if len(pts1) > 0:
-#         d1 = np.linalg.norm(pts1, axis=1)
-#         print(f'Pair #{pair_idx} ({i}-{j}): pts1 (view{i}) range = [{d1.min():.4f}, {d1.max():.4f}]')
-#     if len(pts2) > 0:
-#         d2 = np.linalg.norm(pts2, axis=1)
-#         print(f'Pair #{pair_idx} ({i}-{j}): pts2 (view{j} in view{i}) range = [{d2.min():.4f}, {d2.max():.4f}]')
-
-#     if pose_list is not None:
-#         pts1 = transform_pts_to_ref_frame(pts1, i, pose_list)
-#         pts2 = transform_pts_to_ref_frame(pts2, i, pose_list)
-
-#     frame_note = ' (cam0 frame)' if pose_list is not None else ''
-
-#     # ---- Figure 1: RGB colored ----
-#     fig_rgb = go.Figure()
-#     if show_view1 and len(pts1) > 0:
-#         if colors1 is not None:
-#             # colors may be [0,1] or [0,255]
-#             scale = 255.0 if colors1.max() <= 1.0 else 1.0
-#             rgb_str = [f'rgb({int(np.clip(c[0]*scale,0,255))},{int(np.clip(c[1]*scale,0,255))},{int(np.clip(c[2]*scale,0,255))})' for c in colors1]
-#             fig_rgb.add_trace(go.Scatter3d(
-#                 x=pts1[:, 0], y=pts1[:, 1], z=pts1[:, 2],
-#                 mode='markers',
-#                 marker=dict(size=2, color=rgb_str, opacity=0.9),
-#                 name=f'View {i} (RGB)'
-#             ))
-#         else:
-#             fig_rgb.add_trace(go.Scatter3d(
-#                 x=pts1[:, 0], y=pts1[:, 1], z=pts1[:, 2],
-#                 mode='markers',
-#                 marker=dict(size=2, color='gray', opacity=0.7),
-#                 name=f'View {i}'
-#             ))
-#     if show_view2 and len(pts2) > 0:
-#         if colors2 is not None:
-#             scale = 255.0 if colors2.max() <= 1.0 else 1.0
-#             rgb_str = [f'rgb({int(np.clip(c[0]*scale,0,255))},{int(np.clip(c[1]*scale,0,255))},{int(np.clip(c[2]*scale,0,255))})' for c in colors2]
-#             fig_rgb.add_trace(go.Scatter3d(
-#                 x=pts2[:, 0], y=pts2[:, 1], z=pts2[:, 2],
-#                 mode='markers',
-#                 marker=dict(size=2, color=rgb_str, opacity=0.9),
-#                 name=f'View {j} (RGB)'
-#             ))
-#         else:
-#             fig_rgb.add_trace(go.Scatter3d(
-#                 x=pts2[:, 0], y=pts2[:, 1], z=pts2[:, 2],
-#                 mode='markers',
-#                 marker=dict(size=2, color='gray', opacity=0.7),
-#                 name=f'View {j}'
-#             ))
-#     fig_rgb.update_layout(
-#         title=f'Pair #{pair_idx}: views {i}–{j} — RGB colored{frame_note}',
-#         scene=dict(aspectmode='data', xaxis_title='X', yaxis_title='Y', zaxis_title='Z'),
-#         margin=dict(l=0, r=0, t=50, b=0),
-#         showlegend=True,
-#     )
-
-#     # ---- Figure 2: Red / Blue by view ----
-#     fig_rb = go.Figure()
-#     if show_view1 and len(pts1) > 0:
-#         fig_rb.add_trace(go.Scatter3d(
-#             x=pts1[:, 0], y=pts1[:, 1], z=pts1[:, 2],
-#             mode='markers',
-#             marker=dict(size=2, color='red', opacity=0.7),
-#             name=f'View {i} pts3d'
-#         ))
-#     if show_view2 and len(pts2) > 0:
-#         fig_rb.add_trace(go.Scatter3d(
-#             x=pts2[:, 0], y=pts2[:, 1], z=pts2[:, 2],
-#             mode='markers',
-#             marker=dict(size=2, color='blue', opacity=0.7),
-#             name=f'View {j} pts3d_in_other_view'
-#         ))
-#     fig_rb.update_layout(
-#         title=f'Pair #{pair_idx}: views {i}–{j} — Red=view{i}, Blue=view{j}{frame_note}',
-#         scene=dict(aspectmode='data', xaxis_title='X', yaxis_title='Y', zaxis_title='Z'),
-#         margin=dict(l=0, r=0, t=50, b=0),
-#         showlegend=True,
-#     )
-
-#     return fig_rgb, fig_rb
 
 def extract_pair_data(output, pair_idx):
     """Extract pred1, pred2 for a single pair from collated output."""
@@ -205,50 +88,6 @@ def _to_int(x):
         return int(x)
     except Exception:
         return int(x)
-
-# def get_pair_indices(output):
-#     """Get (i, j) view indices for each pair."""
-#     view1 = output['view1']
-#     view2 = output['view2']
-#     idx1 = view1['idx']
-#     idx2 = view2['idx']
-#     # collate_with_cat(lists=True) yields a list of tensors, not a stacked tensor
-#     if isinstance(idx1, (list, tuple)):
-#         n_pairs = len(idx1)
-#         pairs = [(_to_int(idx1[e]), _to_int(idx2[e])) for e in range(n_pairs)]
-#     elif isinstance(idx1, torch.Tensor):
-#         idx1 = idx1.cpu().numpy()
-#         idx2 = idx2.cpu().numpy()
-#         n_pairs = idx1.shape[0] if idx1.ndim > 0 else 1
-#         pairs = [(_to_int(idx1[e]), _to_int(idx2[e])) for e in range(n_pairs)]
-#     else:
-#         pairs = [(_to_int(idx1), _to_int(idx2))]
-#     return pairs
-
-
-# def get_pair_images(output, pair_idx):
-#     """Get RGB images for view1 and view2 of a pair."""
-#     view1 = output['view1']
-#     view2 = output['view2']
-
-#     def sel(d, i):
-#         if isinstance(d, dict):
-#             return {k: sel(v, i) for k, v in d.items()}
-#         if isinstance(d, torch.Tensor):
-#             return d[i]
-#         if isinstance(d, (list, tuple)):
-#             return d[i]
-#         return d
-
-#     v1 = sel(view1, pair_idx)
-#     v2 = sel(view2, pair_idx)
-#     img1 = rgb(v1['img']) if 'img' in v1 else None
-#     img2 = rgb(v2['img']) if 'img' in v2 else None
-#     if isinstance(img1, list):
-#         img1 = img1[0] if img1 else None
-#     if isinstance(img2, list):
-#         img2 = img2[0] if img2 else None
-#     return img1, img2
 
 def load_segmentation_masks(folder_path):
 
@@ -449,12 +288,6 @@ def convert_scene_to_glb(outdir,
 
     scene = trimesh.Scene()
 
-    
-    # pct = trimesh.PointCloud(
-    #     all_points.reshape(-1, 3),
-    #     colors=all_colors.reshape(-1, 3)
-    # )
-    # scene.add_geometry(pct)
     pct = trimesh.PointCloud(
         all_points,
         colors=all_colors
@@ -475,9 +308,6 @@ def convert_scene_to_glb(outdir,
 
     os.makedirs(outdir, exist_ok=True)
     outfile = os.path.join(outdir, "scene.glb")
-
-    print("Scene geometries:", scene.geometry.keys())
-    print("Number of geometries:", len(scene.geometry))
 
     scene.export(outfile)
 
@@ -523,9 +353,6 @@ def get_3D_model_from_scene(outdir, scene, min_conf_thr=3, as_pointcloud=False,
         axis=0
     )
 
-    # =========================================================
-    # 🔹 SEGMENTATION (Luca-style integration)
-    # =========================================================
     if image_dir is not None:
         seg_masks = load_segmentation_masks(
             os.path.join(image_dir, "segmentation")
@@ -544,9 +371,6 @@ def get_3D_model_from_scene(outdir, scene, min_conf_thr=3, as_pointcloud=False,
                 ) > 0
 
                 msk_views[i] &= sm
-    # -------------------------------------------------
-    # FINAL MERGE AFTER SEGMENTATION
-    # -------------------------------------------------
 
     all_points_list = []
     all_colors_list = []
@@ -570,12 +394,6 @@ def get_3D_model_from_scene(outdir, scene, min_conf_thr=3, as_pointcloud=False,
         all_points = np.vstack(all_points_list)
         all_colors = np.vstack(all_colors_list)
 
-    print("Merged total points:", all_points.shape[0])
-
-
-    # -------------------------------------------------
-    # Export
-    # -------------------------------------------------
     return convert_scene_to_glb(
         outdir=outdir,
         imgs=imgs_views,
@@ -618,86 +436,6 @@ def merge_preds(pred_list):
 
     return merged
 
-def print_dict_structure(d, prefix=""):
-    if not isinstance(d, dict):
-        print(f"{prefix} (NOT A DICT): {type(d)}")
-        return
-
-    for key, value in d.items():
-        path = f"{prefix}.{key}" if prefix else key
-
-        # ---- Dict ----
-        if isinstance(value, dict):
-            print(f"{path}: DICT (keys={list(value.keys())})")
-            print_dict_structure(value, path)
-
-        # ---- Tensor ----
-        elif isinstance(value, torch.Tensor):
-            print(
-                f"{path}: TENSOR "
-                f"shape={tuple(value.shape)}, "
-                f"dtype={value.dtype}, "
-                f"device={value.device}, "
-                f"requires_grad={value.requires_grad}"
-            )
-
-        # ---- NumPy ----
-        elif isinstance(value, np.ndarray):
-            print(
-                f"{path}: NUMPY "
-                f"shape={value.shape}, "
-                f"dtype={value.dtype}"
-            )
-
-        # ---- List ----
-        elif isinstance(value, list):
-            print(f"{path}: LIST len={len(value)}")
-            if len(value) > 0:
-                print(f"{path}[0]: type={type(value[0])}")
-
-        # ---- Tuple ----
-        elif isinstance(value, tuple):
-            print(f"{path}: TUPLE len={len(value)}")
-
-        # ---- None ----
-        elif value is None:
-            print(f"{path}: None")
-
-        # ---- Anything else ----
-        else:
-            print(f"{path}: type={type(value)}")
-
-# def mat4_to_quat_pose(T):
-#     R = T[:3, :3]
-#     t = T[:3, 3]
-
-#     # Rotation → Quaternion
-#     qw = torch.sqrt(1 + R[0,0] + R[1,1] + R[2,2]) / 2
-#     qx = (R[2,1] - R[1,2]) / (4*qw)
-#     qy = (R[0,2] - R[2,0]) / (4*qw)
-#     qz = (R[1,0] - R[0,1]) / (4*qw)
-
-#     return torch.cat([t, torch.tensor([qx, qy, qz, qw])])
-
-# def debug_view(name, view):
-#     print(f"\n===== {name} =====")
-#     for k, v in view.items():
-#         if isinstance(v, torch.Tensor):
-#             print(f"{k}: TENSOR shape={tuple(v.shape)}, dtype={v.dtype}, device={v.device}")
-#         elif isinstance(v, list):
-#             print(f"{k}: LIST len={len(v)}, type[0]={type(v[0]) if len(v)>0 else None}")
-#         else:
-#             print(f"{k}: {type(v)}")
-
-
-# def debug_pred(name, pred):
-#     print(f"\n===== {name} =====")
-#     for k, v in pred.items():
-#         if isinstance(v, torch.Tensor):
-#             print(f"{k}: TENSOR shape={tuple(v.shape)}, dtype={v.dtype}, device={v.device}")
-#         else:
-#             print(f"{k}: {type(v)}")
-
 def reconstruct_scene(model, device, image_dir, image_size=512, schedule='linear',
                       niter=300, min_conf_thr=3, as_pointcloud=False,
                       mask_sky=False, clean_depth=True, cam_size=0.05,
@@ -720,7 +458,6 @@ def reconstruct_scene(model, device, image_dir, image_size=512, schedule='linear
             image_files, cameras, poses_c2w, image_size)
         if K_list is not None:
             calib_data = {'K_list': K_list, 'pose_list': pose_list, 'cam_order': cam_order}
-            print(f'>> Camera assignment: {cam_order}')
 
     filelist = image_files
     imgs = load_images(image_files, size=image_size, verbose=True)
@@ -731,7 +468,6 @@ def reconstruct_scene(model, device, image_dir, image_size=512, schedule='linear
     if len(imgs) == 1:
         imgs = [imgs[0], copy.deepcopy(imgs[0])]
         imgs[1]['idx'] = 1
-    print(f'>> Loaded {len(imgs)} images')
 
     if tmpdir is not None:
         import shutil
@@ -743,11 +479,7 @@ def reconstruct_scene(model, device, image_dir, image_size=512, schedule='linear
         scenegraph_type = scenegraph_type + "-" + str(refid)
 
     pairs = make_pairs(imgs, scene_graph=scenegraph_type, prefilter=None, symmetrize=True)
-    print(f'>> Created {len(pairs)} image pairs (symmetrized)')
 
-    # ------------------------------------------------------------
-    # ✅ Inference_with_info für alle Paare
-    # ------------------------------------------------------------
     all_view1 = []
     all_view2 = []
     all_pred1 = []
@@ -756,12 +488,10 @@ def reconstruct_scene(model, device, image_dir, image_size=512, schedule='linear
     image_id_map = {}
     views = []
 
-    # -------- Build stable image ID mapping --------
     for idx, img in enumerate(imgs):
         filename = os.path.basename(img["path"])
         image_id_map[filename] = idx
 
-    # -------- Build views --------
     for img in imgs:
         img_path = img["path"]
         filename = os.path.basename(img_path)
@@ -789,11 +519,6 @@ def reconstruct_scene(model, device, image_dir, image_size=512, schedule='linear
     subsample = 20
 
     for pair in pairs:
-###################################################
-    # for pair_idx, pair in enumerate(pairs):
-    #     if pair_idx >= 2:
-    #         break
-###################################################
 
         img1_entry, img2_entry = pair
 
@@ -806,16 +531,6 @@ def reconstruct_scene(model, device, image_dir, image_size=512, schedule='linear
         view1 = views[img1_id]
         view2 = views[img2_id]
 
-        # debug_view("VIEW1", view1)
-        # debug_view("VIEW2", view2)
-
-        # print("\n===== EXTRAS =====")
-        # print("K1:", view1['camera_intrinsics'].shape)
-        # print("K2:", view2['camera_intrinsics'].shape)
-        # print("cam1:", view1['camera_pose'].shape)
-        # print("cam2:", view2['camera_pose'].shape)
-
-
         with torch.no_grad():
             pred1, pred2 = model.inference_with_info(
                 view1, view2,
@@ -825,22 +540,11 @@ def reconstruct_scene(model, device, image_dir, image_size=512, schedule='linear
                 cam2=view2['camera_pose']
             )
 
-            # debug_pred("PRED1", pred1)
-            # debug_pred("PRED2", pred2)
-
-
-            pts = pred1["pts3d"][0].reshape(-1,3).cpu().numpy()
-            print("Pred1: Pair raw pts mean:", pts.mean(0))
-            pts2 = pred2["pts3d_in_other_view"][0].reshape(-1,3).detach().cpu().numpy()
-            print("Pred2: Pair raw pts mean:", pts2.mean(0))
-
-        # -------- pred1 --------
         pts1 = pred1["pts3d"][0]                  
         pts1 = pts1[::subsample, ::subsample, :]  
         pts1 = pts1.reshape(-1, 3).cpu().numpy()
         all_points_pred1.append(pts1)
 
-        # -------- pred2 --------
         pts2 = pred2["pts3d_in_other_view"][0]
         pts2 = pts2[::subsample, ::subsample, :]
         pts2 = pts2.reshape(-1, 3).cpu().numpy()
@@ -853,103 +557,26 @@ def reconstruct_scene(model, device, image_dir, image_size=512, schedule='linear
         all_pred2.append(pred2)
 
 
-    ## pointcloud einzelm ausgeben lassen
-
-    # pair_id = 2
-
-    # pts1 = all_points_pred1[pair_id]
-    # pts2 = all_points_pred2[pair_id]
-
-    # fig = plt.figure()
-    # ax = fig.add_subplot(111, projection='3d')
-
-    # ax.scatter(pts1[:,0], pts1[:,1], pts1[:,2], s=1)
-    # ax.scatter(pts2[:,0], pts2[:,1], pts2[:,2], s=1)
-
-    # plt.show()
-
-    # import trimesh
-    
-
-    # debug_points = np.vstack([pts1, pts2])
-
-    # # einfache Farbe (weiß)
-    # debug_colors = np.ones((debug_points.shape[0], 3)) * 255
-
-    # debug_pc = trimesh.PointCloud(debug_points, colors=debug_colors)
-
-    # debug_file = os.path.join(outdir, f"debug_pair_{pair_id}.glb")
-    # debug_pc.export(debug_file)
-
-    # print("Saved debug cloud:", debug_file)
-
-    # subprocess.run([
-    #     sys.executable,
-    #     r"C:\Users\lucag\Luca_Grab\Studium\Master\Masterarbeit\3D Reconstruction and Grasp Planning\work\pointcloud_vergleich\visualize_glb_p.py",
-    #     debug_file,
-    #     outdir,
-    #     str(0)
-    # ], check=True)
-
     all_points_pred1 = np.concatenate(all_points_pred1, axis=0)
     all_points_pred2 = np.concatenate(all_points_pred2, axis=0)
 
-    print("Total pred1 points:", all_points_pred1.shape)
-    print("Total pred2 points:", all_points_pred2.shape)
-
-
-    # fig = plt.figure()
-    # ax = fig.add_subplot(111, projection='3d')
-
-    # ax.scatter(
-    #     all_points_pred1[:,0],
-    #     all_points_pred1[:,1],
-    #     all_points_pred1[:,2],
-    #     s=1
-    # )
-
-    # ax.scatter(
-    #     all_points_pred2[:,0],
-    #     all_points_pred2[:,1],
-    #     all_points_pred2[:,2],
-    #     s=1
-    # )
-
-    # ax.set_xlabel("X")
-    # ax.set_ylabel("Y")
-    # ax.set_zlabel("Z")
-
-    # plt.show()
-
-    
-
     merged_view1 = merge_views(all_view1)
     merged_view2 = merge_views(all_view2)
-    merged_pred1 = merge_preds(all_pred1)
-
-    pts = merged_pred1["pts3d"].reshape(-1,3).cpu().numpy()
-    print("Pred1: Merged raw cloud:", pts.shape)
-    
+    merged_pred1 = merge_preds(all_pred1)   
 
     merged_pred2 = merge_preds(all_pred2)
-
-    pts2 = merged_pred2["pts3d_in_other_view"].reshape(-1,3).detach().cpu().numpy()
-    print("Pred2: Merged raw cloud:", pts2.shape)
 
     merged_pred1 = {
         "pts3d": merged_pred1["pts3d"],
         "conf": merged_pred1["conf"],
     }
 
-######################################
     for v in [merged_view1, merged_view2]:
         v.pop("camera_intrinsics", None)
         v.pop("camera_pose", None)
 
-    # --- normalize multiview pred2 to DUSt3R format ---
     merged_pred2.pop("pts3d2", None)
     merged_pred2.pop("conf2", None)
-######################################
 
     dust3r_output = {
         "view1": merged_view1,
@@ -959,49 +586,21 @@ def reconstruct_scene(model, device, image_dir, image_size=512, schedule='linear
         "loss": None,
     }
 
-    # pairs = get_pair_indices(dust3r_output)
-
-
-
-    print("\n========== STRUCTURE DEBUG ==========")
-    print_dict_structure(dust3r_output)
-    print("=====================================\n")
-
-
-    # ------------------------------------------------------------
-    # Global Alignment
-    # ------------------------------------------------------------
-
     mode = (
         GlobalAlignerMode.PointCloudOptimizer
         if len(imgs) > 2
         else GlobalAlignerMode.PairViewer
     )
 
-    print(f'>> Global alignment mode: {mode.value}')
-
     view1 = dust3r_output["view1"]
     view2 = dust3r_output["view2"]
 
-    # print("view1 idx DAVOR:", view1["idx"])
-    # print("view2 idx DAVOR:", view2["idx"])
-
     unique = sorted(set(view1["idx"]) | set(view2["idx"]))
-
-    print("OLD indices:", unique)
 
     mapping = {old: new for new, old in enumerate(unique)}
 
-    print("IDX MAPPING:", mapping)
-
     view1["idx"] = [mapping[i] for i in view1["idx"]]
     view2["idx"] = [mapping[i] for i in view2["idx"]]
-
-    print("NEW indices:", sorted(set(view1["idx"]) | set(view2["idx"])))
-
-    print("view1 idx DANACH:", view1["idx"])
-    print("view2 idx DANACH:", view2["idx"])
-
 
     scene = global_aligner(
         dust3r_output,
@@ -1010,40 +609,15 @@ def reconstruct_scene(model, device, image_dir, image_size=512, schedule='linear
         verbose=True
     )
 
-    # --- Get initial point cloud ---
     pts3d_list = scene.get_pts3d()
     pts3d = torch.cat(
         [p.reshape(-1, 3) for p in pts3d_list],
         dim=0
     ).detach().cpu().numpy()
 
-    print("After MST alignment:", pts3d.shape)
-
-    # --- Debug camera poses ---
     poses = scene.get_im_poses().detach().cpu().numpy()
 
-    print("Camera centers:")
-    for i, T in enumerate(poses):
-        print(i, T[:3, 3])
-
-    # --- Debug number of cameras ---
-    print("Number of optimized cameras:", len(scene.get_im_poses()))
-
-    print("\n===== AFTER GLOBAL ALIGNER INIT =====")
-
-    print("Initial focals:")
-    print(scene.im_focals.detach().cpu().numpy())
-
-    print("\nInitial principal points:")
-    print(scene.im_pp.detach().cpu().numpy())
-
-    print("\nInitial camera poses:")
     poses = scene.get_im_poses().detach().cpu().numpy()
-    for i, p in enumerate(poses):
-        print(f"Pose {i}:")
-        print(p)
-
-    print("=====================================\n")
 
     pts3d_list = scene.get_pts3d()
 
@@ -1054,18 +628,7 @@ def reconstruct_scene(model, device, image_dir, image_size=512, schedule='linear
     print("After MST alignment:", pts3d.shape)
 
     poses = scene.get_im_poses().detach().cpu().numpy()
-    print("Camera centers:")
-    for i, T in enumerate(poses):
-        print(i, T[:3, 3])
 
-    #debug
-    print("Number of optimized cameras:", len(scene.get_im_poses()))
-
-    # ------------------------------------------------------------
-    # Kalibrierungs-Preset
-    # ------------------------------------------------------------
-
-    # --- Freeze intrinsics ---
     if calib_data is not None:
         K_list = calib_data['K_list']
         pose_list = calib_data['pose_list']
@@ -1082,82 +645,23 @@ def reconstruct_scene(model, device, image_dir, image_size=512, schedule='linear
 
         scene.preset_principal_point(known_pp)
 
-        # --- Set focals ---
         scene.preset_focal(known_focals)
-        print(f'>> Presetting {n_images} focal lengths and principal points from calibration')
 
-        # # --- Set principal points ---
-        # for i, pp in enumerate(known_pp):
-        #     H, W = scene.imshapes[i]
-        #     scene.im_pp[i].data[:] = (
-        #         torch.tensor(pp, dtype=torch.float32)
-        #         - torch.tensor([W / 2, H / 2])
-        #     )
-        #     if scene.verbose:
-        #         print(f' (setting principal point #{i} = {pp})')
-
-        # --- Freeze intrinsics ---
         scene.im_focals.requires_grad_(False)
         scene.im_pp.requires_grad_(False)
 
-        # ----------------------------------------------------------
-        # --- Set poses ---
-        # ----------------------------------------------------------
         if pose_list is not None and n_images == n_cameras:
             known_poses = [
                 torch.tensor(p, dtype=torch.float32)
                 for p in pose_list
             ]
 
-            print(f'>> Presetting {n_images} camera poses from calibration')
             scene.preset_pose(known_poses)
             scene.im_poses.requires_grad_(False)
-
-        elif pose_list is not None:
-            print(
-                f'>> Multi-timestep scene ({n_images} images, {n_cameras} cameras): '
-                f'intrinsics preset, poses will be estimated'
-            )
-
-        print("\n===== BEFORE ALIGNMENT =====")
-
-        print("Focals:")
-        print(scene.im_focals.detach().cpu().numpy())
-
-        print("\nPrincipal Points (offset from image center):")
-        print(scene.im_pp.detach().cpu().numpy())
-
-        if pose_list is not None:
-            print("\nKnown poses from calibration:")
-            for i, p in enumerate(pose_list):
-                print(f"Pose {i}:")
-                print(p)
-
-        print("============================\n")
 
     if mode == GlobalAlignerMode.PointCloudOptimizer:
         lr = 0.01
         loss = scene.compute_global_alignment(init='mst', niter=niter, schedule=schedule, lr=lr)
-
-        print("\n===== AFTER OPTIMIZATION =====")
-
-        print("Optimized focals:")
-        print(scene.im_focals.detach().cpu().numpy())
-
-        print("\nOptimized principal points:")
-        print(scene.im_pp.detach().cpu().numpy())
-
-        print("\nOptimized poses:")
-        poses = scene.get_im_poses().detach().cpu().numpy()
-        for i, p in enumerate(poses):
-            print(f"Pose {i}:")
-            print(p)
-
-        print("==============================\n")
-
-        print(f'>> Global alignment final loss: {loss}')
-        pts = pts3d.reshape(-1,3)
-        print("Final cloud mean:", pts.mean(0))
 
     if mode == GlobalAlignerMode.ModularPointCloudOptimizer:
 
@@ -1168,7 +672,7 @@ def reconstruct_scene(model, device, image_dir, image_size=512, schedule='linear
         for i in range(niter):
             optimizer.zero_grad()
 
-            loss = scene()   # forward = alignment loss
+            loss = scene()
 
             loss.backward()
             optimizer.step()
@@ -1178,23 +682,9 @@ def reconstruct_scene(model, device, image_dir, image_size=512, schedule='linear
 
         print("Final loss:", loss.item())
 
-    cams2world = to_numpy(scene.get_im_poses().cpu())
-    print(f'\n>> Camera positions after alignment:')
-    for i, pose in enumerate(cams2world):
-        pos = pose[:3, 3]
-        print(f'   cam #{i}: x={pos[0]:.6f}, y={pos[1]:.6f}, z={pos[2]:.6f}')
-    print(f'\n>> Pairwise distances:')
-    for i in range(len(cams2world)):
-        for j in range(i + 1, len(cams2world)):
-            dist = np.linalg.norm(cams2world[i][:3, 3] - cams2world[j][:3, 3])
-            print(f'   cam #{i} <-> cam #{j}: {dist:.6f}')
-
     outfile = get_3D_model_from_scene(outdir, scene, min_conf_thr, as_pointcloud,
                                       mask_sky, clean_depth, cam_size, image_dir=image_dir)
 
-    # ----------------
-    # Galerie
-    # ----------------
     rgbimg = scene.imgs
     depths = to_numpy(scene.get_depthmaps())
     confs = to_numpy([c for c in scene.im_conf])
@@ -1209,99 +699,6 @@ def reconstruct_scene(model, device, image_dir, image_size=512, schedule='linear
         gallery_imgs.append(rgbimg[i])
         gallery_imgs.append(rgb(depths[i]))
         gallery_imgs.append(rgb(confs[i]))
-
-    # # pair viualisierung
-    # pairs = get_pair_indices(dust3r_output)
-    # pair_choices = [f"Pair #{i}: views {a}-{b}" for i,(a,b) in enumerate(pairs)]
-
-    # def update_display(selected_pairs, conf_thr, subsample, show_view1, show_view2):
-
-    #     fig = go.Figure()
-
-    #     for pair_choice in selected_pairs:
-
-    #         pair_idx = pair_choices.index(pair_choice)
-
-    #         fig_rgb, _ = build_plots(
-    #             dust3r_output,
-    #             pair_idx,
-    #             conf_thr=conf_thr,
-    #             subsample=int(subsample),
-    #             show_view1=show_view1,
-    #             show_view2=show_view2,
-    #             pose_list=None
-    #         )
-
-    #         for trace in fig_rgb.data:
-    #             fig.add_trace(trace)
-
-    #     fig.update_layout(
-    #         scene=dict(aspectmode="data"),
-    #         margin=dict(l=0,r=0,b=0,t=30)
-    #     )
-
-    #     return fig
-
-
-    # with gr.Blocks(title="Pow3R Pair Viewer") as demo:
-
-    #     gr.Markdown("# Pow3R Pair Point Cloud Viewer")
-
-    #     with gr.Row():
-    #         pair_selector = gr.CheckboxGroup(
-    #             choices=pair_choices,
-    #             value=[pair_choices[0]],
-    #             label="Select pairs"
-    #         )
-
-    #         conf_slider = gr.Slider(
-    #             0.0, 20.0,
-    #             value=1.0,
-    #             step=0.5,
-    #             label="Confidence threshold"
-    #         )
-
-    #         subsample_slider = gr.Slider(
-    #             1, 16,
-    #             value=4,
-    #             step=1,
-    #             label="Subsample"
-    #         )
-
-    #     with gr.Row():
-    #         show_view1 = gr.Checkbox(value=True, label="Show view1")
-    #         show_view2 = gr.Checkbox(value=True, label="Show view2")
-
-    #     # with gr.Row():
-    #     #     img1_out = gr.Image(label="View1")
-    #     #     img2_out = gr.Image(label="View2")
-
-    #     with gr.Row():
-    #         plot_rgb = gr.Plot(label="RGB colored")
-    #         #plot_rb = gr.Plot(label="Red / Blue")
-
-    #     inputs = [
-    #         pair_selector,
-    #         conf_slider,
-    #         subsample_slider,
-    #         show_view1,
-    #         show_view2
-    #     ]
-
-    #     outputs = [plot_rgb]
-
-    #     pair_selector.change(update_display, inputs=inputs, outputs=outputs)
-    #     conf_slider.change(update_display, inputs=inputs, outputs=outputs)
-    #     subsample_slider.change(update_display, inputs=inputs, outputs=outputs)
-    #     show_view1.change(update_display, inputs=inputs, outputs=outputs)
-    #     show_view2.change(update_display, inputs=inputs, outputs=outputs)
-
-    #     demo.load(
-    #         fn=lambda: update_display(pair_choices[0],1.0,4,True,True),
-    #         outputs=outputs
-    #     )
-
-    # demo.launch()
 
     return scene, outfile, gallery_imgs
 
@@ -1422,7 +819,6 @@ if __name__ == '__main__':
     model.load_from_checkpoint(ckpt)
     model = model.to(args.device).eval()
 
-    # 🔥 Direkt Multi-View starten
     scene, outfile, gallery_imgs = reconstruct_scene(
         model=model,
         device=args.device,
